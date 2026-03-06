@@ -6,6 +6,10 @@ on:
       - master
   workflow_dispatch:
 
+# Agregamos permisos explícitos para que pueda crear el Release
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: windows-latest
