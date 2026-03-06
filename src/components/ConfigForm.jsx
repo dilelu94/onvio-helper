@@ -96,6 +96,18 @@ const ConfigForm = () => {
       const company = companies.find(c => c.id === companyId);
       const period = `${month}/${year}`;
       
+      // 1. VERIFICACIÓN FÍSICA (OMISIÓN AUTOMÁTICA)
+      const fileExists = await window.electronAPI.checkFileExists({ 
+        year, period: `${month} ${year}`, alias: company.alias, type: scriptType 
+      });
+
+      if (fileExists) {
+        setLogs(prev => prev + `\n[SKIP] ${company.alias} omitido (archivo ya presente en root).\n`);
+        setSelectedCompanies(prev => prev.filter(id => id !== companyId));
+        continue;
+      }
+
+      // 2. VERIFICACIÓN EN DB (MODAL DE CONFIRMACIÓN SI NO HAY ARCHIVO FÍSICO)
       const existing = await window.electronAPI.dbCheckRecord(company.alias, period, scriptType);
       
       if (existing) {

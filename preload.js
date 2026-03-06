@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Base de Datos Excel
   dbCheckRecord: (alias, period, type) => ipcRenderer.invoke('db-check-record', { alias, period, type }),
   dbAddRecord: (data) => ipcRenderer.send('db-add-record', data),
+  checkFileExists: (params) => ipcRenderer.invoke('check-file-exists', params),
 
   onScriptLog: (callback) => {
     const listener = (event, data) => callback(data);

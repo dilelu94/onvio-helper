@@ -67,6 +67,22 @@ ipcMain.handle('db-check-record', (event, { alias, period, type }) => {
   return ExcelDB.findRecord(getDbPath(), alias, period, type);
 });
 
+ipcMain.handle('check-file-exists', (event, { year, period, alias, type }) => {
+  const projectRoot = __dirname;
+  const typeFolder = type === 'Totales' ? 'Totales Generales' : 'Liquidaciones';
+  const fileName = type === 'Totales' ? 'Planilla_Totales_Generales.pdf' : 'Liquidaciones_Detalladas.xlsx';
+  
+  const filePath = path.join(
+    projectRoot, 
+    year.toString(), 
+    `${period.replace('/', ' ')} ${typeFolder}`, 
+    alias.replace(/[^a-z0-9 ]/gi, ' ').trim(),
+    fileName
+  );
+  
+  return fs.existsSync(filePath);
+});
+
 ipcMain.on('db-add-record', (event, data) => {
   ExcelDB.addRecord(getDbPath(), data);
 });
