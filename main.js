@@ -3,13 +3,14 @@ const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
+import ExcelDB from './src/services/ExcelDB';
 
 let mainWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 800,
+    width: 1100,
+    height: 850,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -23,7 +24,6 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
   }
 
-  // Buscar actualizaciones si no estamos en desarrollo
   if (process.env.NODE_ENV !== 'development') {
     autoUpdater.checkForUpdatesAndNotify();
   }
@@ -31,23 +31,19 @@ function createWindow() {
 
 // --- IPC HANDLERS ---
 
-const getConfigPath = () => path.join(app.getPath('userData'), 'config.json');
+const getRootPath = () => app.getPath('userData');
+const getConfigPath = () => path.join(getRootPath(), 'config.json');
+const getDbPath = () => path.join(getRootPath(), 'database.xlsx');
 
 ipcMain.handle('load-config', () => {
   const configPath = getConfigPath();
   if (fs.existsSync(configPath)) {
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    
-    // Descifrar contraseña si existe y el cifrado está disponible
     if (config.password && safeStorage.isEncryptionAvailable()) {
       try {
         const buffer = Buffer.from(config.password, 'base64');
-        const decrypted = safeStorage.decryptString(buffer);
-        config.password = decrypted;
-      } catch (e) {
-        console.error('Error al descifrar contraseña:', e);
-        // No borramos la contraseña por si es un error temporal del sistema
-      }
+        config.password = safeStorage.decryptString(buffer);
+      } catch (e) { console.error('Error decrypt:', e); }
     }
     return config;
   }
@@ -56,23 +52,27 @@ ipcMain.handle('load-config', () => {
 
 ipcMain.on('save-config', (event, config) => {
   const configToSave = { ...config };
-  
-  // Cifrar contraseña antes de guardar si el cifrado está disponible
   if (configToSave.password && safeStorage.isEncryptionAvailable()) {
     try {
       const encrypted = safeStorage.encryptString(configToSave.password);
       configToSave.password = encrypted.toString('base64');
-    } catch (e) {
-      console.error('Error al cifrar contraseña:', e);
-    }
+    } catch (e) { console.error('Error encrypt:', e); }
   }
-  
   fs.writeFileSync(getConfigPath(), JSON.stringify(configToSave, null, 2));
+});
+
+// --- EXCEL DB HANDLERS ---
+
+ipcMain.handle('db-check-record', (event, { alias, period, type }) => {
+  return ExcelDB.findRecord(getDbPath(), alias, period, type);
+});
+
+ipcMain.on('db-add-record', (event, data) => {
+  ExcelDB.addRecord(getDbPath(), data);
 });
 
 ipcMain.on('run-script', (event, { scriptName, params }) => {
   const scriptPath = path.join(__dirname, 'scripts', scriptName);
-  
   const env = { 
     ...process.env, 
     ONVIO_USER: params.user,

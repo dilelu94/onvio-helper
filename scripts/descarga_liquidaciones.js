@@ -145,10 +145,11 @@ async function run() {
 
     const download = await dlPromise;
     
-    // Construir ruta de guardado: Escritorio / MM YYYY Liquidaciones / Alias / Liquidaciones_Detalladas.xlsx
-    const desktopPath = path.join(process.env.HOME || process.env.USERPROFILE, 'Desktop');
-    const folderName = `${MONTH} ${YEAR} Liquidaciones`;
-    const targetDir = path.join(desktopPath, folderName, ALIAS.replace(/[^a-z0-9 ]/gi, ' ').trim());
+    // --- NUEVA LÓGICA DE CARPETAS JERÁRQUICA EN ROOT ---
+    const projectRoot = path.join(__dirname, '..');
+    const yearFolder = path.join(projectRoot, YEAR);
+    const periodFolder = path.join(yearFolder, `${MONTH} ${YEAR} Liquidaciones`);
+    const targetDir = path.join(periodFolder, ALIAS.replace(/[^a-z0-9 ]/gi, ' ').trim());
     
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
