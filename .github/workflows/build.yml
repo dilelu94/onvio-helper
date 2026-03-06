@@ -17,22 +17,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22 # Actualizado a la versión requerida
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm install
-
-      - name: Build Frontend
-        run: npm run build:vite
-        env:
-          NODE_ENV: production
+        run: npm install --include=dev # Aseguramos devDependencies como Vite
 
       - name: Build and Release Electron
         uses: samuelmeuli/action-electron-builder@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           release: true
+          # El comando build ya ejecuta vite build && electron-builder según el package.json
         env:
-          # Para que electron-builder sepa que estamos en producción
           NODE_ENV: production
