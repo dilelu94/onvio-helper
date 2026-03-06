@@ -72,6 +72,7 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
     ONVIO_USER: params.user,
     ONVIO_PASS: params.password,
     ONVIO_COMPANY: params.companyName,
+    ONVIO_ALIAS: params.companyAlias,
     TARGET_MONTH: params.month,
     TARGET_YEAR: params.year
   };

@@ -6,11 +6,17 @@ require('dotenv').config();
 const USER = process.env.ONVIO_USER;
 const PASS = process.env.ONVIO_PASS;
 const COMPANY = process.env.ONVIO_COMPANY;
+const ALIAS = process.env.ONVIO_ALIAS || process.env.ONVIO_COMPANY;
 const MONTH = process.env.TARGET_MONTH;
 const YEAR = process.env.TARGET_YEAR;
 
+if (!USER || !PASS || !COMPANY || !MONTH || !YEAR) {
+  console.error('ERROR: Faltan parámetros requeridos.');
+  process.exit(1);
+}
+
 async function run() {
-  console.log(`[INICIO] Totales Generales: ${COMPANY} (${MONTH}/${YEAR})`);
+  console.log(`[INICIO] Totales Generales: ${ALIAS} (${MONTH}/${YEAR})`);
   const browser = await chromium.launch({ headless: false }); 
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -64,84 +70,64 @@ async function run() {
     await estudioPage.getByRole('button', { name: 'Aceptar' }).click();
     await estudioPage.waitForTimeout(2000);
 
-    // 5. CAPTURA POR ADN DEL ARCHIVO (TAMAÑO Y CONTENIDO)
-    console.log('[LOG] Emitiendo reporte. Discriminando pestañas...');
+    // 5. EMISIÓN Y CAPTURA BINARIA
+    console.log('[LOG] Emitiendo reporte...');
     await estudioPage.getByRole('button', { name: 'Emitir' }).click();
 
     let reportPage = null;
     const globalTimeout = Date.now() + 60000;
-    
     while (Date.now() < globalTimeout && !reportPage) {
-      const allPages = context.pages();
-      for (const p of allPages) {
+      for (const p of context.pages()) {
         try {
-          const url = p.url();
-          if (!url.startsWith('blob:')) continue;
-
-          const title = (await p.title()).toLowerCase();
-          
-          // ANALISIS PROFUNDO
-          const info = await p.evaluate(async (u) => {
-            try {
-              const resp = await fetch(u);
-              const blob = await resp.blob();
-              const text = await blob.text();
-              return {
-                size: blob.size,
-                hasCorrectText: text.includes('Planilla de Totales Generales') || text.includes('Totales Gral')
-              };
-            } catch (e) { return null; }
-          }, url);
-
-          if (info) {
-            console.log(`[DEBUG] Analizando Blob -> Tamaño: ${info.size}, Título: "${title}", Contenido Correcto: ${info.hasCorrectText}`);
-            
-            // PRIORIDAD 1: Tiene el texto exacto
-            if (info.hasCorrectText && !title.includes('por sector')) {
-              reportPage = p;
-              break;
-            }
-            
-            // PRIORIDAD 2: El título coincide con lo que buscamos (Gral)
-            if (title.includes('totales') && title.includes('gral') && title.includes('seccion')) {
-              reportPage = p;
-              break;
-            }
+          if (p.url().startsWith('blob:')) {
+            const isCorrect = await p.evaluate(async (u) => {
+              try {
+                const resp = await fetch(u);
+                const blob = await resp.blob();
+                const text = await blob.text();
+                return text.includes('Planilla de Totales Generales') || text.includes('Totales Gral');
+              } catch (e) { return false; }
+            }, p.url());
+            if (isCorrect) { reportPage = p; break; }
           }
         } catch (e) {}
       }
-      if (!reportPage) await estudioPage.waitForTimeout(3000);
+      if (!reportPage) await new Promise(r => setTimeout(r, 3000));
     }
 
-    if (!reportPage) {
-      throw new Error('No se pudo identificar la pestaña del reporte correcto.');
+    if (reportPage) {
+        // --- NUEVA LÓGICA DE CARPETAS ---
+        const desktopPath = path.join(process.env.HOME || process.env.USERPROFILE, 'Desktop');
+        const folderName = `${MONTH} ${YEAR} Liquidaciones`;
+        const targetDir = path.join(desktopPath, folderName, ALIAS.replace(/[^a-z0-9 ]/gi, ' ').trim());
+
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
+
+        const savePath = path.join(targetDir, `Planilla_Totales_Generales.pdf`);
+        
+        const base64Data = await reportPage.evaluate(async () => {
+            const resp = await fetch(window.location.href);
+            const b = await resp.blob();
+            return new Promise(res => {
+                const rd = new FileReader();
+                rd.onloadend = () => res(rd.result.split(',')[1]);
+                rd.readAsDataURL(b);
+            });
+        });
+
+        fs.writeFileSync(savePath, Buffer.from(base64Data, 'base64'));
+        console.log(`[SUCCESS] PDF guardado en: ${savePath}`);
+        process.exit(0);
+    } else {
+        throw new Error('No se encontró el PDF.');
     }
-
-    // 6. GUARDADO
-    console.log('[LOG] Pestaña identificada con éxito. Guardando...');
-    const pdfUrl = reportPage.url();
-    const desktopPath = path.join(process.env.HOME || process.env.USERPROFILE, 'Desktop');
-    const savePath = path.join(desktopPath, `Planilla_${COMPANY.replace(/[^a-z0-9]/gi, '_')}_${MONTH}_${YEAR}.pdf`);
-
-    const base64Data = await reportPage.evaluate(async (u) => {
-      const resp = await fetch(u);
-      const b = await resp.blob();
-      return new Promise(r => {
-        const reader = new FileReader();
-        reader.onloadend = () => r(reader.result.split(',')[1]);
-        reader.readAsDataURL(b);
-      });
-    }, pdfUrl);
-
-    fs.writeFileSync(savePath, Buffer.from(base64Data, 'base64'));
-    console.log(`[SUCCESS] PDF guardado: ${savePath}`);
-    process.exit(0);
 
   } catch (error) {
     console.error(`[ERROR] ${error.message}`);
     process.exit(1);
   } finally {
-    await new Promise(r => setTimeout(r, 10000));
     await browser.close();
   }
 }

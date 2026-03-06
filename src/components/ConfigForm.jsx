@@ -8,14 +8,26 @@ const ConfigForm = () => {
   const [tempPassword, setTempPassword] = useState('');
   const [selectedCompanies, setSelectedCompanies] = useState([]);
   const [newCompanyName, setNewCompanyName] = useState('');
+  const [newCompanyAlias, setNewCompanyAlias] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editAlias, setEditAlias] = useState('');
   const [isRunning, setIsRunning] = useState(false);
-  const [logs, setLogs] = useState('');
+  
+  const [currentCompanyStatus, setCurrentCompanyStatus] = useState('');
+  const [currentStep, setCurrentStep] = useState('');
+  const [finalSummary, setFinalSummary] = useState('');
+  const [showFullLogs, setShowFullLogs] = useState(false);
+  const [accumulatedLogs, setAccumulatedLogs] = useState('');
+
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [month, setMonth] = useState(new Date().getMonth().toString().padStart(2, '0'));
   const [year, setYear] = useState(new Date().getFullYear().toString());
 
   const isElectron = !!window.electronAPI;
   const isRunningRef = useRef(false);
+  const lastExitCode = useRef(0);
+  const fullLogsBuffer = useRef('');
 
   useEffect(() => {
     if (isElectron) {
@@ -27,12 +39,21 @@ const ConfigForm = () => {
         setCompanies(config.companies || []);
       });
 
-      // Limpiamos los listeners anteriores antes de añadir nuevos
       const removeLogListener = window.electronAPI.onScriptLog((data) => {
-        setLogs(prev => prev + data);
+        fullLogsBuffer.current += data;
+        setAccumulatedLogs(fullLogsBuffer.current);
+        const lines = data.split('\n');
+        const lastLogLine = lines.filter(l => l.includes('[LOG]')).pop();
+        if (lastLogLine) setCurrentStep(lastLogLine.replace('[LOG]', '').trim());
+        if (data.includes('[SUCCESS]')) setCurrentStep('✅ ¡Completado!');
+        if (data.includes('[ERROR]')) {
+          setCurrentStep('❌ ERROR');
+          setShowFullLogs(true);
+        }
       });
 
-      const removeFinishListener = window.electronAPI.onScriptFinished(() => {
+      const removeFinishListener = window.electronAPI.onScriptFinished((code) => {
+        lastExitCode.current = code;
         isRunningRef.current = false;
         setIsRunning(false);
       });
@@ -44,32 +65,48 @@ const ConfigForm = () => {
     }
   }, [isElectron]);
 
-  const saveConfigToDisk = (config) => {
-    if (isElectron) window.electronAPI.saveConfig(config);
+  const saveConfigToDisk = (newCompanies = companies) => {
+    if (isElectron) window.electronAPI.saveConfig({ user: savedUser, password: savedPassword, companies: newCompanies });
   };
 
   const handleSaveCreds = (e) => {
     e.preventDefault();
     setSavedUser(tempUser);
     setSavedPassword(tempPassword);
-    saveConfigToDisk({ user: tempUser, password: tempPassword, companies });
+    if (isElectron) window.electronAPI.saveConfig({ user: tempUser, password: tempPassword, companies });
     setShowConfigModal(false);
   };
 
   const handleAddCompany = () => {
     if (!newCompanyName.trim()) return;
     const newId = `id-${Date.now()}`;
-    const newCompanies = [...companies, { name: newCompanyName, id: newId }];
+    const newCompanies = [...companies, { name: newCompanyName, alias: newCompanyAlias || newCompanyName, id: newId }];
     setCompanies(newCompanies);
-    saveConfigToDisk({ user: savedUser, password: savedPassword, companies: newCompanies });
+    saveConfigToDisk(newCompanies);
     setNewCompanyName('');
+    setNewCompanyAlias('');
+  };
+
+  const startEditing = (company) => {
+    setEditingId(company.id);
+    setEditName(company.name);
+    setEditAlias(company.alias);
+  };
+
+  const cancelEditing = () => setEditingId(null);
+
+  const saveEdit = () => {
+    const newCompanies = companies.map(c => c.id === editingId ? { ...c, name: editName, alias: editAlias } : c);
+    setCompanies(newCompanies);
+    saveConfigToDisk(newCompanies);
+    setEditingId(null);
   };
 
   const handleRemoveCompany = (id) => {
     const newCompanies = companies.filter(c => c.id !== id);
     setCompanies(newCompanies);
     setSelectedCompanies(selectedCompanies.filter(cid => cid !== id));
-    saveConfigToDisk({ user: savedUser, password: savedPassword, companies: newCompanies });
+    saveConfigToDisk(newCompanies);
   };
 
   const toggleSelection = (id) => {
@@ -78,40 +115,60 @@ const ConfigForm = () => {
 
   const runSequentially = async (scriptName) => {
     if (selectedCompanies.length === 0 || isRunning) return;
+    
     setIsRunning(true);
     isRunningRef.current = true;
-    setLogs(`--- Iniciando descarga secuencial ---\n`);
+    setShowFullLogs(false);
+    setAccumulatedLogs('');
+    fullLogsBuffer.current = '';
+    setFinalSummary('');
+    
+    const failedCompanies = [];
+    const initialSelection = [...selectedCompanies];
 
-    for (const companyId of selectedCompanies) {
+    for (const companyId of initialSelection) {
       const company = companies.find(c => c.id === companyId);
-      setLogs(prev => prev + `\n> PROCESANDO: ${company.name}...\n`);
+      setCurrentCompanyStatus(`Procesando: ${company.alias}`);
+      setCurrentStep('Iniciando...');
       
       isRunningRef.current = true;
       setIsRunning(true);
 
       window.electronAPI.runScript(scriptName, {
-        user: savedUser,
-        password: savedPassword,
-        companyName: company.name,
-        month,
-        year
+        user: savedUser, password: savedPassword, 
+        companyName: company.name, companyAlias: company.alias, 
+        month, year
       });
 
       await new Promise(resolve => {
         const check = setInterval(() => {
           if (!isRunningRef.current) {
+            if (lastExitCode.current === 0) {
+              // DESTILDAR SI TUVO ÉXITO
+              setSelectedCompanies(prev => prev.filter(id => id !== companyId));
+            } else {
+              failedCompanies.push(company.alias);
+            }
             clearInterval(check);
             resolve();
           }
         }, 1000);
       });
     }
-    setLogs(prev => prev + `\n--- TODAS LAS TAREAS FINALIZADAS ---\n`);
+
+    if (failedCompanies.length === 0) {
+      setFinalSummary(`✨ ¡Descargas completadas con éxito!`);
+    } else {
+      setFinalSummary(`⚠️ Proceso terminado con errores en: ${failedCompanies.join(', ')}`);
+    }
+    
+    setCurrentCompanyStatus('');
+    setCurrentStep('');
     setIsRunning(false);
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'system-ui, sans-serif', maxWidth: '1000px', margin: 'auto' }}>
+    <div style={{ padding: '20px', fontFamily: 'system-ui, sans-serif', maxWidth: '100%', boxSizing: 'border-box' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
         <div>
           <h1 style={{ margin: 0 }}>Onvio Helper 🚀</h1>
@@ -119,63 +176,80 @@ const ConfigForm = () => {
             {savedUser ? `🟢 Conectado como: ${savedUser}` : '🔴 Sin cuenta vinculada'}
           </p>
         </div>
-        <button onClick={() => setShowConfigModal(true)} style={{ padding: '10px 15px', borderRadius: '8px', border: '1px solid #ccc', cursor: 'pointer', background: '#fff' }}>⚙️ Configuración</button>
+        <button onClick={() => setShowConfigModal(true)} style={{ padding: '10px 15px', borderRadius: '8px', border: '1px solid #ccc', cursor: 'pointer', background: '#fff' }}>⚙️ Cuenta</button>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '20px' }}>
-        <section style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #eee' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
+        <section style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #eee', minWidth: 0 }}>
           <h3>🏢 Mis Empresas</h3>
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-            <input placeholder="Nombre empresa..." value={newCompanyName} onChange={e => setNewCompanyName(e.target.value)} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }} />
-            <button onClick={handleAddCompany} style={{ padding: '10px', borderRadius: '6px', border: 'none', background: '#007bff', color: '#fff', cursor: 'pointer' }}>+</button>
+          <div style={{ display: 'flex', gap: '5px', marginBottom: '15px' }}>
+            <input placeholder="Nombre Real" value={newCompanyName} onChange={e => setNewCompanyName(e.target.value)} style={{ flex: 2, padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }} />
+            <input placeholder="Alias" value={newCompanyAlias} onChange={e => setNewCompanyAlias(e.target.value)} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }} />
+            <button onClick={handleAddCompany} style={{ padding: '10px 15px', borderRadius: '6px', border: 'none', background: '#007bff', color: '#fff', cursor: 'pointer' }}>+</button>
           </div>
-          <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #eee', borderRadius: '8px' }}>
+          <div style={{ maxHeight: '60vh', overflowY: 'auto', border: '1px solid #eee', borderRadius: '8px' }}>
             {companies.map(c => (
-              <div key={c.id} style={{ display: 'flex', alignItems: 'center', padding: '12px', borderBottom: '1px solid #f9f9f9' }}>
-                <input type="checkbox" checked={selectedCompanies.includes(c.id)} onChange={() => toggleSelection(c.id)} style={{ width: '18px', height: '18px' }} />
-                <span style={{ marginLeft: '12px', flex: 1 }}>{c.name}</span>
-                <button onClick={() => handleRemoveCompany(c.id)} style={{ color: '#ff4d4f', border: 'none', background: 'none', cursor: 'pointer' }}>✕</button>
+              <div key={c.id} style={{ display: 'flex', alignItems: 'center', padding: '10px', borderBottom: '1px solid #f9f9f9', gap: '10px', backgroundColor: editingId === c.id ? '#fff9db' : 'transparent' }}>
+                <input type="checkbox" checked={selectedCompanies.includes(c.id)} onChange={() => toggleSelection(c.id)} disabled={!!editingId} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {editingId === c.id ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      <input value={editAlias} onChange={e => setEditAlias(e.target.value)} style={{ width: '100%' }} />
+                      <input value={editName} onChange={e => setEditName(e.target.value)} style={{ width: '100%', fontSize: '0.8em' }} />
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.alias}</div>
+                      <div style={{ fontSize: '0.75em', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div>
+                    </>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  {editingId === c.id ? (
+                    <><button onClick={saveEdit} style={{ cursor: 'pointer' }}>✅</button><button onClick={cancelEditing} style={{ cursor: 'pointer' }}>❌</button></>
+                  ) : (
+                    <><button onClick={() => startEditing(c)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>✏️</button><button onClick={() => handleRemoveCompany(c.id)} style={{ border: 'none', background: 'none', color: 'red', cursor: 'pointer' }}>✕</button></>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         </section>
 
-        <section style={{ backgroundColor: '#fdfdfd', padding: '20px', borderRadius: '12px', border: '1px solid #eee' }}>
+        <section style={{ backgroundColor: '#fdfdfd', padding: '20px', borderRadius: '12px', border: '1px solid #eee', minWidth: 0 }}>
           <h3>📋 Panel de Control</h3>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center', background: '#f0f0f0', padding: '10px', borderRadius: '8px' }}>
             <span>Periodo:</span>
             <select value={month} onChange={e => setMonth(e.target.value)} style={{ padding: '5px' }}>
-              {Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0')).map(m => (
-                <option key={m} value={m}>{m}</option>
-              ))}
+              {Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0')).map(m => <option key={m} value={m}>{m}</option>)}
             </select>
             <input type="number" value={year} onChange={e => setYear(e.target.value)} style={{ width: '70px', padding: '5px' }} />
           </div>
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <button 
-              onClick={() => runSequentially('descarga_totales_generales.js')} 
-              disabled={isRunning || selectedCompanies.length === 0 || !savedUser}
-              title="Descarga la planilla de Totales Generales.pdf"
-              style={{ padding: '15px', fontSize: '1em', backgroundColor: (isRunning || !savedUser) ? '#ccc' : '#4CAF50', color: 'white', border: 'none', borderRadius: '8px', cursor: (isRunning || !savedUser) ? 'default' : 'pointer', fontWeight: 'bold' }}
-            >
-              {isRunning ? '⏳ Procesando...' : '📥 Descargar Totales Generales'}
-            </button>
-            <button 
-              onClick={() => runSequentially('descarga_liquidaciones.js')} 
-              disabled={isRunning || selectedCompanies.length === 0 || !savedUser}
-              title="Descarga las liquidaciones detalladas en Excel"
-              style={{ padding: '15px', fontSize: '1em', backgroundColor: (isRunning || !savedUser) ? '#ccc' : '#2196F3', color: 'white', border: 'none', borderRadius: '8px', cursor: (isRunning || !savedUser) ? 'default' : 'pointer', fontWeight: 'bold' }}
-            >
-              📥 Descargar Liquidaciones
-            </button>
+            <button onClick={() => runSequentially('descarga_totales_generales.js')} disabled={isRunning || selectedCompanies.length === 0 || !savedUser || !!editingId} style={{ padding: '15px', backgroundColor: (isRunning || !savedUser || !!editingId) ? '#ccc' : '#4CAF50', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>📥 Totales Generales</button>
+            <button onClick={() => runSequentially('descarga_liquidaciones.js')} disabled={isRunning || selectedCompanies.length === 0 || !savedUser || !!editingId} style={{ padding: '15px', backgroundColor: (isRunning || !savedUser || !!editingId) ? '#ccc' : '#2196F3', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>📥 Liquidaciones Detalladas</button>
           </div>
 
-          <div style={{ marginTop: '20px' }}>
-            <strong>Logs:</strong>
-            <pre style={{ backgroundColor: '#1e1e1e', color: '#4af626', padding: '15px', height: '350px', overflowY: 'auto', fontSize: '12px', borderRadius: '8px', marginTop: '10px', lineHeight: '1.4' }}>
-              {logs || 'Listo.'}
-            </pre>
+          <div style={{ marginTop: '25px', backgroundColor: '#1e1e1e', color: '#fff', borderRadius: '10px', padding: '20px', minHeight: '150px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+            {isRunning && (
+              <div style={{ width: '100%' }}>
+                <div style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#4af626' }}>{currentCompanyStatus}</div>
+                <div style={{ fontSize: '0.9em', color: '#aaa' }}>{currentStep}</div>
+              </div>
+            )}
+            {finalSummary && (
+              <div style={{ color: finalSummary.includes('éxito') ? '#4af626' : '#ff4d4f', fontWeight: 'bold' }}>{finalSummary}</div>
+            )}
+            {showFullLogs && (
+              <pre style={{ textAlign: 'left', fontSize: '11px', color: '#ccc', maxHeight: '150px', overflowY: 'auto', whiteSpace: 'pre-wrap', marginTop: '15px', width: '100%' }}>{accumulatedLogs}</pre>
+            )}
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            {showFullLogs ? (
+              <button onClick={() => setShowFullLogs(false)} style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', fontSize: '0.8em', marginTop: '10px' }}>Ocultar detalles</button>
+            ) : (
+              (isRunning || finalSummary) && <button onClick={() => setShowFullLogs(true)} style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', fontSize: '0.8em', marginTop: '10px' }}>Ver detalles</button>
+            )}
           </div>
         </section>
       </div>
@@ -185,14 +259,8 @@ const ConfigForm = () => {
           <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '15px', width: '400px' }}>
             <h2>⚙️ Configurar Onvio</h2>
             <form onSubmit={handleSaveCreds}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Email</label>
-                <input type="text" value={tempUser} onChange={e => setTempUser(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' }} />
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Contraseña</label>
-                <input type="password" value={tempPassword} onChange={e => setTempPassword(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' }} />
-              </div>
+              <div style={{ marginBottom: '15px' }}><label>Email</label><input type="text" value={tempUser} onChange={e => setTempUser(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' }} /></div>
+              <div style={{ marginBottom: '20px' }}><label>Contraseña</label><input type="password" value={tempPassword} onChange={e => setTempPassword(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' }} /></div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" style={{ flex: 1, padding: '12px', background: '#4CAF50', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Vincular</button>
                 <button type="button" onClick={() => setShowConfigModal(false)} style={{ flex: 1, padding: '12px', background: '#eee', color: '#333', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancelar</button>
