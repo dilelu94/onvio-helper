@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, safeStorage } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
@@ -20,6 +21,11 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:5173');
   } else {
     mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+  }
+
+  // Buscar actualizaciones si no estamos en desarrollo
+  if (process.env.NODE_ENV !== 'development') {
+    autoUpdater.checkForUpdatesAndNotify();
   }
 }
 

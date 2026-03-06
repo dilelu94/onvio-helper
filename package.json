@@ -3,12 +3,44 @@
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dilelu94/onvio-helper.git"
+  },
   "scripts": {
     "test": "vitest run --dir tests/unit",
     "dev": "vite",
     "start": "NODE_ENV=development electron .",
-    "build": "vite build",
+    "build:vite": "vite build",
+    "build:electron": "electron-builder",
+    "build": "npm run build:vite && npm run build:electron",
     "preview": "vite preview"
+  },
+  "build": {
+    "appId": "com.dilelu.onviohelper",
+    "productName": "OnvioHelper",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "dilelu94",
+        "repo": "onvio-helper"
+      }
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    },
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "dist/**/*",
+      "scripts/**/*",
+      "main.js",
+      "preload.js",
+      "package.json"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -26,6 +58,7 @@
   },
   "dependencies": {
     "dotenv": "^17.3.1",
+    "electron-updater": "^6.8.3",
     "playwright": "^1.58.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
