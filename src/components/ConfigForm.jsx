@@ -21,6 +21,7 @@ const ConfigForm = () => {
   const [accumulatedLogs, setAccumulatedLogs] = useState('');
 
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState({ show: false, script: '' });
   const [month, setMonth] = useState(new Date().getMonth().toString().padStart(2, '0'));
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [updateValue, setUpdateValue] = useState('1637');
@@ -38,13 +39,32 @@ const ConfigForm = () => {
   const currentProcessingData = useRef(null);
 
   useEffect(() => {
+    // 1. Intentar cargar desde localStorage primero para feedback instantáneo
+    const cachedCompanies = localStorage.getItem('onvio_companies');
+    const cachedUser = localStorage.getItem('onvio_user');
+    if (cachedCompanies) setCompanies(JSON.parse(cachedCompanies));
+    if (cachedUser) {
+      setSavedUser(cachedUser);
+      setTempUser(cachedUser);
+    }
+
     if (isElectron) {
+      // 2. Cargar la "verdad" desde Electron (archivo físico)
       window.electronAPI.loadConfig().then(config => {
-        setSavedUser(config.user || '');
-        setSavedPassword(config.password || '');
-        setTempUser(config.user || '');
-        setTempPassword(config.password || '');
-        setCompanies(config.companies || []);
+        if (config) {
+          const companiesFromConfig = config.companies || [];
+          const userFromConfig = config.user || '';
+          
+          setSavedUser(userFromConfig);
+          setSavedPassword(config.password || '');
+          setTempUser(userFromConfig);
+          setTempPassword(config.password || '');
+          setCompanies(companiesFromConfig);
+
+          // Sincronizar backup
+          localStorage.setItem('onvio_companies', JSON.stringify(companiesFromConfig));
+          localStorage.setItem('onvio_user', userFromConfig);
+        }
       });
 
       const removeLogListener = window.electronAPI.onScriptLog((data) => {
@@ -92,21 +112,25 @@ const ConfigForm = () => {
     
     const failedCompanies = [];
     const initialSelection = [...selectedCompanies];
-    const scriptType = scriptName.includes('totales') ? 'Totales' : 'Liquidaciones';
+    let scriptType = 'Actualización';
+    if (scriptName.includes('totales')) scriptType = 'Totales';
+    else if (scriptName.includes('liquidaciones')) scriptType = 'Liquidaciones';
 
     for (const companyId of initialSelection) {
       const company = companies.find(c => c.id === companyId);
       const period = `${month}/${year}`;
       
-      // 1. VERIFICACIÓN FÍSICA (OMISIÓN AUTOMÁTICA)
-      const fileExists = await window.electronAPI.checkFileExists({ 
-        year, period: `${month} ${year}`, alias: company.alias, type: scriptType 
-      });
+      // 1. VERIFICACIÓN FÍSICA (Solo para descargas)
+      if (scriptType !== 'Actualización') {
+        const fileExists = await window.electronAPI.checkFileExists({ 
+          year, period: `${month} ${year}`, alias: company.alias, type: scriptType 
+        });
 
-      if (fileExists) {
-        setAccumulatedLogs(prev => prev + `\n[SKIP] ${company.alias} omitido (archivo ya presente en root).\n`);
-        setSelectedCompanies(prev => prev.filter(id => id !== companyId));
-        continue;
+        if (fileExists) {
+          setAccumulatedLogs(prev => prev + `\n[SKIP] ${company.alias} omitido (archivo ya presente en Escritorio).\n`);
+          setSelectedCompanies(prev => prev.filter(id => id !== companyId));
+          continue;
+        }
       }
 
       // 2. VERIFICACIÓN EN DB (MODAL DE CONFIRMACIÓN SI NO HAY ARCHIVO FÍSICO)
@@ -175,30 +199,74 @@ const ConfigForm = () => {
 
   const handleSaveCreds = (e) => {
     e.preventDefault();
-    setSavedUser(tempUser); setSavedPassword(tempPassword);
-    saveConfigToDisk(); setShowConfigModal(false);
-  };
-
-  const saveConfigToDisk = (newCompanies = companies) => {
-    if (isElectron) window.electronAPI.saveConfig({ user: savedUser, password: savedPassword, companies: newCompanies });
+    const newUser = tempUser;
+    const newPass = tempPassword;
+    
+    setSavedUser(newUser); 
+    setSavedPassword(newPass);
+    localStorage.setItem('onvio_user', newUser);
+    
+    // Guardamos directamente con los valores nuevos
+    if (isElectron) {
+      window.electronAPI.saveConfig({ 
+        user: newUser, 
+        password: newPass, 
+        companies: companies 
+      });
+    }
+    setShowConfigModal(false);
   };
 
   const handleAddCompany = () => {
     if (!newCompanyName.trim()) return;
-    const newCompanies = [...companies, { name: newCompanyName, alias: newCompanyAlias || newCompanyName, id: `id-${Date.now()}` }];
-    setCompanies(newCompanies); saveConfigToDisk(newCompanies);
-    setNewCompanyName(''); setNewCompanyAlias('');
+    const newCompany = { 
+      name: newCompanyName, 
+      alias: newCompanyAlias || newCompanyName, 
+      id: `id-${Date.now()}` 
+    };
+    const newCompanies = [...companies, newCompany];
+    
+    setCompanies(newCompanies);
+    localStorage.setItem('onvio_companies', JSON.stringify(newCompanies));
+    
+    // Guardamos la lista actualizada inmediatamente
+    if (isElectron) {
+      window.electronAPI.saveConfig({ 
+        user: savedUser, 
+        password: savedPassword, 
+        companies: newCompanies 
+      });
+    }
+    
+    setNewCompanyName(''); 
+    setNewCompanyAlias('');
   };
 
   const handleUpdateCompany = (id, field, value) => {
     const newCompanies = companies.map(c => c.id === id ? { ...c, [field]: value } : c);
-    setCompanies(newCompanies); saveConfigToDisk(newCompanies);
+    setCompanies(newCompanies);
+    localStorage.setItem('onvio_companies', JSON.stringify(newCompanies));
+    if (isElectron) {
+      window.electronAPI.saveConfig({ 
+        user: savedUser, 
+        password: savedPassword, 
+        companies: newCompanies 
+      });
+    }
   };
 
   const handleRemoveCompany = (id) => {
     const newCompanies = companies.filter(c => c.id !== id);
-    setCompanies(newCompanies); setSelectedCompanies(selectedCompanies.filter(cid => cid !== id));
-    saveConfigToDisk(newCompanies);
+    setCompanies(newCompanies); 
+    localStorage.setItem('onvio_companies', JSON.stringify(newCompanies));
+    setSelectedCompanies(selectedCompanies.filter(cid => cid !== id));
+    if (isElectron) {
+      window.electronAPI.saveConfig({ 
+        user: savedUser, 
+        password: savedPassword, 
+        companies: newCompanies 
+      });
+    }
   };
 
   return (
@@ -244,28 +312,15 @@ const ConfigForm = () => {
 
         <section style={{ background: '#fdfdfd', padding: '20px', borderRadius: '12px', border: '1px solid #eee' }}>
           <h3>📋 Panel</h3>
-          <div style={{ marginBottom: '20px' }}>
-            <select value={month} onChange={e => setMonth(e.target.value)}>{Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0')).map(m => <option key={m} value={m}>{m}</option>)}</select>
-            <input type="number" value={year} onChange={e => setYear(e.target.value)} style={{ width: '70px', marginLeft: '5px' }} />
-          </div>
-
-          <div style={{ marginBottom: '20px', padding: '10px', background: '#f0f0f0', borderRadius: '8px' }}>
-            <div style={{ marginBottom: '10px' }}>
-              <label style={{ fontSize: '0.8em', display: 'block' }}>Monto ART/SCVO:</label>
-              <input value={updateValue} onChange={e => setUpdateValue(e.target.value)} style={{ width: '100%', padding: '5px' }} />
-            </div>
-            <div>
-              <label style={{ fontSize: '0.8em', display: 'block' }}>Fecha (ej: 01/03/2026):</label>
-              <input value={updateDate} onChange={e => setUpdateDate(e.target.value)} style={{ width: '100%', padding: '5px' }} />
-            </div>
-          </div>
-
-          <button onClick={() => runSequentially('descarga_totales_generales.js')} disabled={isRunning || selectedCompanies.length === 0} style={{ width: '100%', padding: '10px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px', marginBottom: '10px' }}>📥 Totales Generales</button>
-          <button onClick={() => runSequentially('descarga_liquidaciones.js')} disabled={isRunning || selectedCompanies.length === 0} style={{ width: '100%', padding: '10px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '5px', marginBottom: '10px' }}>📥 Liquidaciones</button>
           
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={() => runSequentially('actualiza_scvo.js')} disabled={isRunning || selectedCompanies.length === 0} style={{ flex: 1, padding: '10px', background: '#9c27b0', color: 'white', border: 'none', borderRadius: '5px' }}>🔄 Actualizar SCVO</button>
-            <button onClick={() => runSequentially('actualiza_artfija.js')} disabled={isRunning || selectedCompanies.length === 0} style={{ flex: 1, padding: '10px', background: '#ff9800', color: 'white', border: 'none', borderRadius: '5px' }}>🔄 Actualizar ARTFIJA</button>
+          <div style={{ marginBottom: '20px' }}>
+            <button onClick={() => setShowUpdateModal({ show: true, script: 'descarga_totales_generales.js' })} disabled={isRunning || selectedCompanies.length === 0} style={{ width: '100%', padding: '10px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px', marginBottom: '10px' }}>📥 Totales Generales</button>
+            <button onClick={() => setShowUpdateModal({ show: true, script: 'descarga_liquidaciones.js' })} disabled={isRunning || selectedCompanies.length === 0} style={{ width: '100%', padding: '10px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '5px', marginBottom: '20px' }}>📥 Liquidaciones</button>
+            
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => setShowUpdateModal({ show: true, script: 'actualiza_scvo.js' })} disabled={isRunning || selectedCompanies.length === 0} style={{ flex: 1, padding: '10px', background: '#9c27b0', color: 'white', border: 'none', borderRadius: '5px' }}>🔄 Actualizar SCVO</button>
+              <button onClick={() => setShowUpdateModal({ show: true, script: 'actualiza_artfija.js' })} disabled={isRunning || selectedCompanies.length === 0} style={{ flex: 1, padding: '10px', background: '#ff9800', color: 'white', border: 'none', borderRadius: '5px' }}>🔄 Actualizar ARTFIJA</button>
+            </div>
           </div>
 
           <div style={{ marginTop: '20px', background: '#1e1e1e', color: '#4af626', padding: '15px', borderRadius: '8px', minHeight: '100px' }}>
@@ -273,6 +328,62 @@ const ConfigForm = () => {
           </div>
         </section>
       </div>
+
+      {/* MODAL DE PARÁMETROS DE PROCESO */}
+      {showUpdateModal.show && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
+          <div style={{ background: 'white', padding: '30px', borderRadius: '15px', maxWidth: '400px', width: '90%' }}>
+            <h3 style={{ marginTop: 0 }}>Parámetros de {showUpdateModal.script.includes('descarga') ? 'Descarga' : 'Actualización'}</h3>
+            
+            {showUpdateModal.script.includes('descarga') ? (
+              /* CAMPOS PARA DESCARGA */
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Mes:</label>
+                  <select value={month} onChange={e => setMonth(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '5px' }}>
+                    {Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0')).map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Año:</label>
+                  <input type="number" value={year} onChange={e => setYear(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
+                </div>
+              </div>
+            ) : (
+              /* CAMPOS PARA ACTUALIZACIÓN */
+              <>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Monto:</label>
+                  <input value={updateValue} onChange={e => setUpdateValue(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
+                </div>
+                <div style={{ marginBottom: '25px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Fecha (01/MM/AAAA):</label>
+                  <input value={updateDate} onChange={e => setUpdateDate(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
+                </div>
+              </>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button 
+                onClick={() => {
+                  const script = showUpdateModal.script;
+                  setShowUpdateModal({ show: false, script: '' });
+                  runSequentially(script);
+                }} 
+                style={{ flex: 2, padding: '12px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px', fontWeight: 'bold' }}
+              >
+                🚀 Iniciar Proceso
+              </button>
+              <button 
+                onClick={() => setShowUpdateModal({ show: false, script: '' })} 
+                style={{ flex: 1, padding: '12px', background: '#eee', border: 'none', borderRadius: '5px' }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL DE CONFIRMACIÓN CON TIEMPO */}
       {confirmModal.show && (

@@ -42,13 +42,22 @@ function createWindow() {
 // --- IPC HANDLERS ---
 
 const getRootPath = () => app.getPath('userData');
-const getConfigPath = () => path.join(getRootPath(), 'config.json');
+const getDesktopPath = () => app.getPath('desktop');
+
+const getConfigPath = () => {
+  const p = path.join(getRootPath(), 'config.json');
+  console.log('Ruta de configuración:', p);
+  return p;
+};
+
 const getDbPath = () => path.join(getRootPath(), 'database.xlsx');
 
 ipcMain.handle('load-config', () => {
   const configPath = getConfigPath();
+  console.log('Intentando cargar configuración desde:', configPath);
   if (fs.existsSync(configPath)) {
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    console.log('Configuración cargada con éxito. Empresas:', config.companies?.length || 0);
     if (config.password && safeStorage.isEncryptionAvailable()) {
       try {
         const buffer = Buffer.from(config.password, 'base64');
@@ -57,10 +66,13 @@ ipcMain.handle('load-config', () => {
     }
     return config;
   }
+  console.log('No se encontró archivo de configuración.');
   return { user: '', password: '', companies: [] };
 });
 
 ipcMain.on('save-config', (event, config) => {
+  const configPath = getConfigPath();
+  console.log('Guardando configuración en:', configPath);
   const configToSave = { ...config };
   if (configToSave.password && safeStorage.isEncryptionAvailable()) {
     try {
@@ -68,7 +80,8 @@ ipcMain.on('save-config', (event, config) => {
       configToSave.password = encrypted.toString('base64');
     } catch (e) { console.error('Error encrypt:', e); }
   }
-  fs.writeFileSync(getConfigPath(), JSON.stringify(configToSave, null, 2));
+  fs.writeFileSync(configPath, JSON.stringify(configToSave, null, 2));
+  console.log('Configuración guardada. Empresas:', configToSave.companies?.length || 0);
 });
 
 // --- EXCEL DB HANDLERS ---
@@ -78,14 +91,14 @@ ipcMain.handle('db-check-record', (event, { alias, period, type }) => {
 });
 
 ipcMain.handle('check-file-exists', (event, { year, period, alias, type }) => {
-  const projectRoot = __dirname;
+  const desktop = getDesktopPath();
   const typeFolder = type === 'Totales' ? 'Totales Generales' : 'Liquidaciones';
   const fileName = type === 'Totales' ? 'Planilla_Totales_Generales.pdf' : 'Liquidaciones_Detalladas.xlsx';
   
   const filePath = path.join(
-    projectRoot, 
-    year.toString(), 
-    `${period.replace('/', ' ')} ${typeFolder}`, 
+    desktop,
+    typeFolder,
+    period.replace('/', ' '),
     alias.replace(/[^a-z0-9 ]/gi, ' ').trim(),
     fileName
   );
@@ -99,6 +112,8 @@ ipcMain.on('db-add-record', (event, data) => {
 
 ipcMain.on('run-script', (event, { scriptName, params }) => {
   const scriptPath = path.join(__dirname, 'scripts', scriptName);
+  const desktop = getDesktopPath();
+  
   const env = { 
     ...process.env, 
     ONVIO_USER: params.user,
@@ -108,7 +123,8 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
     TARGET_MONTH: params.month,
     TARGET_YEAR: params.year,
     MONTO_ACTUALIZAR: params.updateValue,
-    TARGET_DATE: params.updateDate
+    TARGET_DATE: params.updateDate,
+    DESKTOP_PATH: desktop
   };
 
   const child = spawn('node', [scriptPath], { env });
