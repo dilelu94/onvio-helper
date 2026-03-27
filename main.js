@@ -1,9 +1,19 @@
-const { app, BrowserWindow, ipcMain, safeStorage } = require('electron');
+import { app, BrowserWindow, ipcMain, safeStorage } from 'electron';
+import { createRequire } from 'module';
+import path from 'path';
+import fs from 'fs';
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import ExcelDB from './src/services/ExcelDB.js';
+
+// En ESM no existe __dirname por defecto, lo definimos así:
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Para autoUpdater si usa commonjs internamente
+const require = createRequire(import.meta.url);
 const { autoUpdater } = require('electron-updater');
-const path = require('path');
-const fs = require('fs');
-const { spawn } = require('child_process');
-import ExcelDB from './src/services/ExcelDB';
 
 let mainWindow;
 
@@ -96,7 +106,9 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
     ONVIO_COMPANY: params.companyName,
     ONVIO_ALIAS: params.companyAlias,
     TARGET_MONTH: params.month,
-    TARGET_YEAR: params.year
+    TARGET_YEAR: params.year,
+    MONTO_ACTUALIZAR: params.updateValue,
+    TARGET_DATE: params.updateDate
   };
 
   const child = spawn('node', [scriptPath], { env });

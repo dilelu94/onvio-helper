@@ -23,6 +23,8 @@ const ConfigForm = () => {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [month, setMonth] = useState(new Date().getMonth().toString().padStart(2, '0'));
   const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [updateValue, setUpdateValue] = useState('1637');
+  const [updateDate, setUpdateDate] = useState('01/03/2026');
 
   // Estados para el Modal de Confirmación con Tiempo
   const [confirmModal, setConfirmModal] = useState({ show: false, message: '', onConfirm: null, onCancel: null });
@@ -102,7 +104,7 @@ const ConfigForm = () => {
       });
 
       if (fileExists) {
-        setLogs(prev => prev + `\n[SKIP] ${company.alias} omitido (archivo ya presente en root).\n`);
+        setAccumulatedLogs(prev => prev + `\n[SKIP] ${company.alias} omitido (archivo ya presente en root).\n`);
         setSelectedCompanies(prev => prev.filter(id => id !== companyId));
         continue;
       }
@@ -146,7 +148,8 @@ const ConfigForm = () => {
       window.electronAPI.runScript(scriptName, {
         user: savedUser, password: savedPassword, 
         companyName: company.name, companyAlias: company.alias, 
-        month, year
+        month, year,
+        updateValue, updateDate
       });
 
       await new Promise(resolve => {
@@ -245,8 +248,25 @@ const ConfigForm = () => {
             <select value={month} onChange={e => setMonth(e.target.value)}>{Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0')).map(m => <option key={m} value={m}>{m}</option>)}</select>
             <input type="number" value={year} onChange={e => setYear(e.target.value)} style={{ width: '70px', marginLeft: '5px' }} />
           </div>
+
+          <div style={{ marginBottom: '20px', padding: '10px', background: '#f0f0f0', borderRadius: '8px' }}>
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ fontSize: '0.8em', display: 'block' }}>Monto ART/SCVO:</label>
+              <input value={updateValue} onChange={e => setUpdateValue(e.target.value)} style={{ width: '100%', padding: '5px' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.8em', display: 'block' }}>Fecha (ej: 01/03/2026):</label>
+              <input value={updateDate} onChange={e => setUpdateDate(e.target.value)} style={{ width: '100%', padding: '5px' }} />
+            </div>
+          </div>
+
           <button onClick={() => runSequentially('descarga_totales_generales.js')} disabled={isRunning || selectedCompanies.length === 0} style={{ width: '100%', padding: '10px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px', marginBottom: '10px' }}>📥 Totales Generales</button>
-          <button onClick={() => runSequentially('descarga_liquidaciones.js')} disabled={isRunning || selectedCompanies.length === 0} style={{ width: '100%', padding: '10px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '5px' }}>📥 Liquidaciones</button>
+          <button onClick={() => runSequentially('descarga_liquidaciones.js')} disabled={isRunning || selectedCompanies.length === 0} style={{ width: '100%', padding: '10px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '5px', marginBottom: '10px' }}>📥 Liquidaciones</button>
+          
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={() => runSequentially('actualiza_scvo.js')} disabled={isRunning || selectedCompanies.length === 0} style={{ flex: 1, padding: '10px', background: '#9c27b0', color: 'white', border: 'none', borderRadius: '5px' }}>🔄 Actualizar SCVO</button>
+            <button onClick={() => runSequentially('actualiza_artfija.js')} disabled={isRunning || selectedCompanies.length === 0} style={{ flex: 1, padding: '10px', background: '#ff9800', color: 'white', border: 'none', borderRadius: '5px' }}>🔄 Actualizar ARTFIJA</button>
+          </div>
 
           <div style={{ marginTop: '20px', background: '#1e1e1e', color: '#4af626', padding: '15px', borderRadius: '8px', minHeight: '100px' }}>
             {isRunning ? (<div><b>{currentCompanyStatus}</b><br/>{currentStep}</div>) : (finalSummary || 'Listo.')}
