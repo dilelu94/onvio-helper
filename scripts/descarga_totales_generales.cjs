@@ -16,13 +16,14 @@ if (!USER || !PASS || !COMPANY || !MONTH || !YEAR) {
 }
 
 async function run() {
-  console.log(`[INICIO] Totales Generales: ${ALIAS} (${MONTH}/${YEAR})`);
+  console.log(`[LOG] Iniciando descarga de Totales Generales para: ${ALIAS} (${MONTH}/${YEAR})`);
   const browser = await chromium.launch({ headless: false }); 
   const context = await browser.newContext();
   const page = await context.newPage();
 
   try {
     // 1. LOGIN
+    console.log('[LOG] Iniciando sesión en Onvio...');
     await page.goto('https://onvio.com.ar/staff/#/login');
     await page.getByRole('button', { name: 'Iniciar sesión' }).first().click().catch(() => {});
     await page.getByRole('textbox', { name: /correo/i }).fill(USER);
@@ -30,8 +31,10 @@ async function run() {
     await page.getByRole('textbox', { name: /contraseña/i }).fill(PASS);
     await page.getByRole('button', { name: /iniciar/i }).click();
     await page.waitForURL(/.*staff.*/, { timeout: 60000 });
+    console.log('[LOG] Login exitoso.');
 
     // 2. ABRIR SUELDOS
+    console.log('[LOG] Abriendo módulo de Sueldos y Jornales...');
     await page.waitForLoadState('networkidle');
     await page.getByRole('link', { name: 'Menú' }).click();
     const popupPromise = page.waitForEvent('popup');
@@ -40,6 +43,7 @@ async function run() {
     await estudioPage.waitForLoadState('load');
 
     // 3. SELECCIÓN DE EMPRESA
+    console.log(`[LOG] Seleccionando empresa: ${COMPANY}`);
     await estudioPage.waitForTimeout(8000); 
     const searchBox = estudioPage.getByRole('textbox', { name: 'Buscar por Código, Razón' });
     await searchBox.waitFor({ state: 'visible' });
@@ -52,12 +56,14 @@ async function run() {
     await estudioPage.waitForSelector('.ui-dialog, .modal-backdrop', { state: 'hidden', timeout: 30000 });
 
     // 4. NAVEGACIÓN A REPORTE
+    console.log('[LOG] Navegando a Planilla de Totales por Sector...');
     await estudioPage.getByRole('heading', { name: ' Reportes' }).click();
     await estudioPage.getByRole('link', { name: 'Planilla de Totales por Sector' }).first().click();
     await estudioPage.getByRole('textbox', { name: 'Período:' }).fill(`${MONTH} ${YEAR}`);
     await estudioPage.getByTitle('Seleccionar').click();
     await estudioPage.waitForTimeout(5000);
     
+    console.log(`[LOG] Buscando periodos para ${MONTH}/${YEAR}...`);
     const targetDate = `${MONTH}/${YEAR}`;
     const rows = estudioPage.getByRole('row');
     const count = await rows.count();
@@ -71,7 +77,7 @@ async function run() {
     await estudioPage.waitForTimeout(2000);
 
     // 5. EMISIÓN Y CAPTURA BINARIA
-    console.log('[LOG] Emitiendo reporte...');
+    console.log('[LOG] Emitiendo reporte y capturando PDF...');
     await estudioPage.getByRole('button', { name: 'Emitir' }).click();
 
     let reportPage = null;

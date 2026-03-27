@@ -314,8 +314,8 @@ const ConfigForm = () => {
           <h3>📋 Panel</h3>
           
           <div style={{ marginBottom: '20px' }}>
-            <button onClick={() => setShowUpdateModal({ show: true, script: 'descarga_totales_generales.js' })} disabled={isRunning || selectedCompanies.length === 0} style={{ width: '100%', padding: '10px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px', marginBottom: '10px' }}>📥 Totales Generales</button>
-            <button onClick={() => setShowUpdateModal({ show: true, script: 'descarga_liquidaciones.js' })} disabled={isRunning || selectedCompanies.length === 0} style={{ width: '100%', padding: '10px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '5px', marginBottom: '20px' }}>📥 Liquidaciones</button>
+            <button onClick={() => setShowUpdateModal({ show: true, script: 'descarga_totales_generales.cjs' })} disabled={isRunning || selectedCompanies.length === 0} style={{ width: '100%', padding: '10px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px', marginBottom: '10px' }}>📥 Totales Generales</button>
+            <button onClick={() => setShowUpdateModal({ show: true, script: 'descarga_liquidaciones.cjs' })} disabled={isRunning || selectedCompanies.length === 0} style={{ width: '100%', padding: '10px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '5px', marginBottom: '20px' }}>📥 Liquidaciones</button>
             
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setShowUpdateModal({ show: true, script: 'actualiza_scvo.js' })} disabled={isRunning || selectedCompanies.length === 0} style={{ flex: 1, padding: '10px', background: '#9c27b0', color: 'white', border: 'none', borderRadius: '5px' }}>🔄 Actualizar SCVO</button>
