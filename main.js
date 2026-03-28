@@ -123,41 +123,34 @@ ipcMain.on('db-add-record', (event, data) => {
 });
 
 ipcMain.on('run-script', (event, { scriptName, params }) => {
-  // Ruta absoluta en Windows instalada
-  const scriptPath = app.isPackaged 
-    ? path.join(process.resourcesPath, 'scripts', scriptName)
-    : path.join(__dirname, 'scripts', scriptName);
+  let scriptPath;
+  
+  if (app.isPackaged) {
+    // 1. Intento en resources/scripts (extraResources)
+    const path1 = path.join(process.resourcesPath, 'scripts', scriptName);
+    // 2. Intento en resources/app.asar.unpacked/scripts (asarUnpack)
+    const path2 = path.join(process.resourcesPath, 'app.asar.unpacked', 'scripts', scriptName);
     
-  console.log('Intentando ejecutar script en:', scriptPath);
-
-  // Verificación de seguridad con Super Diagnostic Info
-  if (!fs.existsSync(scriptPath)) {
-    let resourcesContent = [];
-    try {
-      resourcesContent = fs.readdirSync(process.resourcesPath);
-    } catch (e) {
-      resourcesContent = [`Err: ${e.message}`];
+    if (fs.existsSync(path1)) {
+      scriptPath = path1;
+    } else if (fs.existsSync(path2)) {
+      scriptPath = path2;
+    } else {
+      // Si falla, mostramos diagnóstico completo
+      let resContent = [];
+      try { resContent = fs.readdirSync(process.resourcesPath); } catch(e){}
+      
+      const errorMsg = `❌ ERROR: Script no encontrado.\n` +
+                       `Buscado en:\n1. ${path1}\n2. ${path2}\n` +
+                       `Contenido resources: [${resContent.join(', ')}]`;
+      mainWindow.webContents.send('script-log', errorMsg);
+      return;
     }
-
-    const diagInfo = {
-      isPackaged: app.isPackaged,
-      execPath: process.execPath,
-      resourcesPath: process.resourcesPath,
-      appPath: app.getAppPath(),
-      dirname: __dirname,
-      targetScript: scriptPath,
-      resourcesList: resourcesContent
-    };
-
-    const errorMsg = `❌ ERROR DE RUTA:\n` +
-                     `Buscado: ${diagInfo.targetScript}\n` +
-                     `Resources: [${diagInfo.resourcesList.join(', ')}]\n` +
-                     `AppPath: ${diagInfo.appPath}\n` +
-                     `Exec: ${diagInfo.execPath}`;
-                     
-    mainWindow.webContents.send('script-log', errorMsg);
-    return;
+  } else {
+    scriptPath = path.join(__dirname, 'scripts', scriptName);
   }
+    
+  console.log('Ejecutando script en:', scriptPath);
   
   const env = { 
     ...process.env, 

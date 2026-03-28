@@ -24,3 +24,21 @@ playwright-report/
 blob-report/
 playwright/.cache/
 .env
+dist_electron/
+dist/
+repos/
+Applications/
+Applications/
+apps/
+Desktop/
+Downloads/
+Games\ M2/
+HeadsetControl/
+Music/
+Pictures/
+Public/
+Templates/
+Videos/
+videos/
+google-cloud-sdk/
+google-cloud-cli-linux-x86_64.tar.gz
