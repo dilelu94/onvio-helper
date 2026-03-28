@@ -1,0 +1,43 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+# Agregamos permisos explícitos para que pueda crear el Release
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Vite Frontend
+        run: npm run build:vite
+        env:
+          NODE_ENV: production
+
+      - name: Build and Publish Electron
+        run: npx electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_ENV: production

@@ -1,0 +1,92 @@
+{
+  "name": "onvio-helper",
+  "version": "1.4.9",
+  "description": "Onvio 'artfija' matrix update automation",
+  "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dilelu94/onvio-helper.git"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test tests/smoke.test.ts",
+    "dev": "vite",
+    "start": "NODE_ENV=development electron .",
+    "build:vite": "vite build",
+    "bundle:scripts": "esbuild scripts/actualiza_scvo.js scripts/actualiza_artfija.js scripts/descarga_totales_generales.js scripts/descarga_liquidaciones.js --bundle --platform=node --format=esm --outdir=dist_scripts --external:playwright --external:playwright-core",
+    "build:electron": "electron-builder",
+    "build": "npm run bundle:scripts && npm run build:vite && npm run build:electron",
+    "preview": "vite preview"
+  },
+  "build": {
+    "appId": "com.dilelu.onviohelper",
+    "productName": "OnvioHelper",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "dilelu94",
+        "repo": "onvio-helper",
+        "releaseType": "release"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png"
+    },
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/playwright-core/**/*",
+      "node_modules/playwright/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "dist_scripts",
+        "to": "scripts",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "dist/**/*",
+      "src/**/*",
+      "build/**/*",
+      "main.js",
+      "preload.js",
+      "package.json"
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@vitejs/plugin-react": "^5.1.4",
+    "cross-env": "^7.0.3",
+    "electron": "^40.7.0",
+    "electron-builder": "^26.8.1",
+    "esbuild": "^0.21.5",
+    "jsdom": "^28.1.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "electron-updater": "^6.8.3",
+    "playwright": "^1.58.2",
+    "playwright-core": "^1.58.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "xlsx": "^0.18.5"
+  }
+}
