@@ -37,6 +37,21 @@ function createWindow() {
   if (process.env.NODE_ENV !== 'development') {
     autoUpdater.checkForUpdatesAndNotify();
   }
+
+  // Notificaciones de Auto-Update para el usuario
+  autoUpdater.on('update-available', () => {
+    console.log('Actualización disponible.');
+    if (mainWindow) {
+      mainWindow.webContents.send('script-log', '\n[SISTEMA] Nueva versión detectada. Descargando en segundo plano...\n');
+    }
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    console.log('Actualización descargada.');
+    if (mainWindow) {
+      mainWindow.webContents.send('script-log', '\n[SISTEMA] ¡Actualización lista! Se aplicará al reiniciar el programa.\n');
+    }
+  });
 }
 
 // --- IPC HANDLERS ---
