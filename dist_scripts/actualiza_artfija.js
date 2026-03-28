@@ -20,6 +20,13 @@ if (resourcesPath) {
 console.log(`[DEBUG] Requiring playwright from: ${playwrightPath}`);
 var { chromium } = require2(playwrightPath);
 async function run() {
+  const {
+    ONVIO_USER,
+    ONVIO_PASS,
+    ONVIO_COMPANY,
+    MONTO_ACTUALIZAR,
+    TARGET_DATE
+  } = process.env;
   console.log(`[LOG] Iniciando proceso ARTFIJA para: ${ONVIO_COMPANY}`);
   let browser;
   try {

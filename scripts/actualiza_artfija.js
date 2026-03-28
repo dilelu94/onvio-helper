@@ -26,6 +26,14 @@ const { chromium } = require(playwrightPath);
 import { execSync } from 'child_process';
 
 async function run() {
+  const { 
+    ONVIO_USER, 
+    ONVIO_PASS, 
+    ONVIO_COMPANY, 
+    MONTO_ACTUALIZAR, 
+    TARGET_DATE 
+  } = process.env;
+
   console.log(`[LOG] Iniciando proceso ARTFIJA para: ${ONVIO_COMPANY}`);
   
   let browser;
