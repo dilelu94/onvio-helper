@@ -134,35 +134,38 @@ const ConfigForm = () => {
       }
 
       // 2. VERIFICACIÓN EN DB (MODAL DE CONFIRMACIÓN SI NO HAY ARCHIVO FÍSICO)
-      const existing = await window.electronAPI.dbCheckRecord(company.alias, period, scriptType);
-      
-      if (existing) {
-        const shouldDownload = await new Promise((resolve) => {
-          setCountdown(10);
-          setConfirmModal({
-            show: true,
-            message: `⚠️ ${company.alias} ya descargado el ${existing['Fecha Descarga']}.`,
-            onConfirm: () => { resolve(true); setConfirmModal({ show: false }); },
-            onCancel: () => { resolve(false); setConfirmModal({ show: false }); }
+      // Solo para scripts de descarga (Totales o Liquidaciones)
+      if (scriptType !== 'Actualización') {
+        const existing = await window.electronAPI.dbCheckRecord(company.alias, period, scriptType);
+        
+        if (existing) {
+          const shouldDownload = await new Promise((resolve) => {
+            setCountdown(10);
+            setConfirmModal({
+              show: true,
+              message: `⚠️ ${company.alias} ya descargado el ${existing['Fecha Descarga']}.`,
+              onConfirm: () => { resolve(true); setConfirmModal({ show: false }); },
+              onCancel: () => { resolve(false); setConfirmModal({ show: false }); }
+            });
+
+            timerRef.current = setInterval(() => {
+              setCountdown(prev => {
+                if (prev <= 1) {
+                  clearInterval(timerRef.current);
+                  resolve(true); // AUTO-ACEPTAR
+                  setConfirmModal({ show: false });
+                  return 0;
+                }
+                return prev - 1;
+              });
+            }, 1000);
           });
 
-          timerRef.current = setInterval(() => {
-            setCountdown(prev => {
-              if (prev <= 1) {
-                clearInterval(timerRef.current);
-                resolve(true); // AUTO-ACEPTAR
-                setConfirmModal({ show: false });
-                return 0;
-              }
-              return prev - 1;
-            });
-          }, 1000);
-        });
-
-        clearInterval(timerRef.current);
-        if (!shouldDownload) {
-          setSelectedCompanies(prev => prev.filter(id => id !== companyId));
-          continue;
+          clearInterval(timerRef.current);
+          if (!shouldDownload) {
+            setSelectedCompanies(prev => prev.filter(id => id !== companyId));
+            continue;
+          }
         }
       }
 
