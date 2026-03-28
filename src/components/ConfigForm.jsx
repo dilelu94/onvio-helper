@@ -276,7 +276,13 @@ const ConfigForm = () => {
           <h1>Onvio Helper 🚀</h1>
           <p style={{ color: savedUser ? 'green' : 'red' }}>{savedUser ? `🟢 ${savedUser}` : '🔴 Sin cuenta'}</p>
         </div>
-        <button onClick={() => setShowConfigModal(true)}>⚙️ Cuenta</button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => {
+            setAccumulatedLogs(prev => prev + '\n[SISTEMA] Buscando actualizaciones...\n');
+            window.electronAPI.checkForUpdates();
+          }}>🔄 Actualizar Programa</button>
+          <button onClick={() => setShowConfigModal(true)}>⚙️ Cuenta</button>
+        </div>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>

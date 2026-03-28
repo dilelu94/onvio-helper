@@ -68,9 +68,28 @@ function createWindow() {
       mainWindow.webContents.send('script-log', '\n[SISTEMA] ¡Actualización lista! Se aplicará al reiniciar el programa.\n');
     }
   });
+
+  autoUpdater.on('error', (err) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('script-log', `\n[SISTEMA] Error en actualización: ${err.message}\n`);
+    }
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    if (mainWindow) {
+      mainWindow.webContents.send('script-log', '\n[SISTEMA] El programa ya está actualizado.\n');
+    }
+  });
 }
 
 // --- IPC HANDLERS ---
+
+ipcMain.handle('check-for-updates', () => {
+  if (process.env.NODE_ENV !== 'development') {
+    return autoUpdater.checkForUpdatesAndNotify();
+  }
+  return null;
+});
 
 const getRootPath = () => app.getPath('userData');
 const getDesktopPath = () => app.getPath('desktop');

@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveConfig: (config) => ipcRenderer.send('save-config', config),
   loadConfig: () => ipcRenderer.invoke('load-config'),
   runScript: (scriptName, params) => ipcRenderer.send('run-script', { scriptName, params }),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   
   // Base de Datos Excel
   dbCheckRecord: (alias, period, type) => ipcRenderer.invoke('db-check-record', { alias, period, type }),
