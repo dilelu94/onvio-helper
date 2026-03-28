@@ -21,7 +21,8 @@ class ScriptRunner {
 
       const child = spawn(finalCommand, args, { 
         shell: true,
-        windowsHide: true
+        windowsHide: true,
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }
       });
 
       child.stdout.on('data', (data) => {
