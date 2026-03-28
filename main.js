@@ -152,6 +152,8 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
     
   console.log('Ejecutando script en:', scriptPath);
   
+  const desktop = getDesktopPath();
+
   const env = { 
     ...process.env, 
     ONVIO_USER: params.user,
