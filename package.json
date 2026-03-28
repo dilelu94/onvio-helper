@@ -1,6 +1,6 @@
 {
   "name": "onvio-helper",
-  "version": "1.3.9",
+  "version": "1.4.0",
   "description": "Onvio 'artfija' matrix update automation",
   "main": "main.js",
   "repository": {
@@ -13,8 +13,9 @@
     "dev": "vite",
     "start": "NODE_ENV=development electron .",
     "build:vite": "vite build",
+    "bundle:scripts": "esbuild scripts/actualiza_scvo.js --bundle --platform=node --format=esm --outfile=dist_scripts/actualiza_scvo.js --external:playwright --external:playwright-core && esbuild scripts/actualiza_artfija.js --bundle --platform=node --format=esm --outfile=dist_scripts/actualiza_artfija.js --external:playwright --external:playwright-core",
     "build:electron": "electron-builder",
-    "build": "npm run build:vite && npm run build:electron",
+    "build": "npm run bundle:scripts && npm run build:vite && npm run build:electron",
     "preview": "vite preview"
   },
   "build": {
@@ -35,17 +36,14 @@
       "icon": "build/icon.png"
     },
     "asar": true,
+    "asarUnpack": [
+      "node_modules/playwright-core/**/*",
+      "node_modules/playwright/**/*"
+    ],
     "extraResources": [
       {
-        "from": "scripts",
+        "from": "dist_scripts",
         "to": "scripts",
-        "filter": [
-          "**/*"
-        ]
-      },
-      {
-        "from": "src/automation",
-        "to": "src/automation",
         "filter": [
           "**/*"
         ]
@@ -75,6 +73,7 @@
     "cross-env": "^7.0.3",
     "electron": "^40.7.0",
     "electron-builder": "^26.8.1",
+    "esbuild": "^0.21.5",
     "jsdom": "^28.1.0",
     "playwright": "^1.58.2",
     "tsx": "^4.7.1",

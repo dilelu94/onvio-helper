@@ -1,6 +1,13 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const { chromium } = require('playwright');
+import path from 'path';
+
+// Buscar playwright en asar.unpacked si estamos en producción
+const playwrightPath = process.env.ELECTRON_RUN_AS_NODE && process.resourcesPath
+  ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'playwright')
+  : 'playwright';
+
+const { chromium } = require(playwrightPath);
 
 import { login } from '../src/automation/utils/auth.js';
 import { MatrixPage } from '../src/automation/pages/MatrixPage.js';
