@@ -224,6 +224,10 @@ ipcMain.on('restart_app', () => {
   autoUpdater.quitAndInstall();
 });
 
+ipcMain.on('check_updates', () => {
+  autoUpdater.checkForUpdatesAndNotify();
+});
+
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
