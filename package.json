@@ -1,6 +1,6 @@
 {
   "name": "onvio-helper",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "",
   "main": "main.js",
   "repository": {
@@ -37,6 +37,7 @@
     "files": [
       "dist/**/*",
       "scripts/**/*",
+      "src/**/*",
       "main.js",
       "preload.js",
       "package.json"
