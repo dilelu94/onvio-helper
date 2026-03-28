@@ -1,6 +1,7 @@
 node_modules/
 dist/
 build/
+!build/icon.png
 *.log
 .env
 .env.local

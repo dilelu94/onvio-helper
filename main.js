@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, safeStorage } from 'electron';
+import { app, BrowserWindow, ipcMain, safeStorage, Menu } from 'electron';
 import { createRequire } from 'module';
 import path from 'path';
 import fs from 'fs';
@@ -18,6 +18,9 @@ const { autoUpdater } = require('electron-updater');
 let mainWindow;
 
 function createWindow() {
+  // Quitar menú por defecto (File, Edit, etc)
+  Menu.setApplicationMenu(null);
+
   // Intentar leer la versión desde package.json (funciona en dev y prod si se incluye en files)
   let version = app.getVersion();
   try {
@@ -34,6 +37,7 @@ function createWindow() {
     width: 1100,
     height: 850,
     title: `Onvio Helper v${version} 🚀`,
+    icon: path.join(__dirname, 'build', 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
