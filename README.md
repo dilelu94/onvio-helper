@@ -1,6 +1,6 @@
-# Onvio Helper - Windows 11 Automation
+# Onvio Helper - Windows 11 Automation & Desktop App
 
-This project is optimized for **Windows 11** compatibility.
+This project is a **Desktop Application** built with Electron and React, optimized for **Windows 11** compatibility. It automates the 'artfija' matrix update in Onvio using Playwright.
 
 ## 🚀 Setup for Windows 11
 
@@ -21,12 +21,32 @@ This project is optimized for **Windows 11** compatibility.
    - Copy `.env.example` to `.env`.
    - Fill in your Onvio credentials.
 
-4. **Run Smoke Test (Verification):**
-   ```powershell
-   npm run test:smoke
-   ```
+## 💻 Running the Desktop App
+
+### Development Mode
+To run the app locally for development:
+```powershell
+npm run dev
+```
+
+### Build the Windows Installer
+To generate the `.exe` installer (found in `dist_electron/`):
+```powershell
+npm run build
+```
+
+## 🧪 Automation Verification
+To run the Playwright smoke tests:
+```powershell
+npm run test:smoke
+```
 
 ## 🛠 Features for Windows Compatibility
 - **Cross-platform Paths**: Uses `path.join` to avoid `/` vs `\` issues.
 - **Cross-env**: Uses `cross-env` for setting environment variables in PowerShell/CMD.
-- **TypeScript (tsx)**: Native execution without complex build steps.
+- **Enhanced POM**: Modular TypeScript structure for Kendo UI grid interaction.
+- **Auto-Update**: Integrated `electron-updater` for seamless application updates.
+
+---
+**Maintained by:** dilelu94
+**Version:** 1.2.3
