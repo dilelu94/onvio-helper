@@ -1,5 +1,3 @@
-import { Page } from '@playwright/test';
-
 /**
  * Handles the Onvio login process.
  * @param page - The Playwright Page object.

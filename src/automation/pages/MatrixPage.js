@@ -1,9 +1,8 @@
-import { Page, Locator } from '@playwright/test';
 import { KendoGrid } from '../components/KendoGrid';
 
 export class MatrixPage {
   page;
-  grid: KendoGrid;
+  grid;
 
   constructor(page) {
     this.page = page;
