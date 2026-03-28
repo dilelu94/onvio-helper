@@ -6,7 +6,7 @@ import { Page } from '@playwright/test';
  * @param user - Onvio username/email.
  * @param pass - Onvio password.
  */
-export async function login(page: Page, user: string, pass: string) {
+export async function login(page, user, pass) {
   console.log('--- INICIANDO LOGIN EN ONVIO ---');
   await page.goto('https://onvio.com.ar/#/');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();

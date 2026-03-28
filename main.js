@@ -18,9 +18,12 @@ const { autoUpdater } = require('electron-updater');
 let mainWindow;
 
 function createWindow() {
+  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+  
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 850,
+    title: `Onvio Helper v${pkg.version} 🚀`,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
