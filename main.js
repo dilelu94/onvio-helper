@@ -127,7 +127,11 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
     DESKTOP_PATH: desktop
   };
 
-  const child = spawn('node', [scriptPath], { env });
+  const child = spawn(process.execPath, [scriptPath], { 
+    env,
+    // En versiones empaquetadas, necesitamos asegurar que el hijo hereda el entorno correcto
+    stdio: ['inherit', 'pipe', 'pipe'] 
+  });
 
   child.stdout.on('data', (data) => {
     mainWindow.webContents.send('script-log', data.toString());
