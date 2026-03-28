@@ -7,13 +7,20 @@ import fs from 'fs';
 const resourcesPath = process.env.RESOURCES_PATH || process.resourcesPath;
 let playwrightPath = 'playwright';
 
+console.log(`[DEBUG] Resources Path: ${resourcesPath}`);
+
 if (resourcesPath) {
   const unpackedPath = path.join(resourcesPath, 'app.asar.unpacked', 'node_modules', 'playwright');
+  console.log(`[DEBUG] Checking unpacked path: ${unpackedPath}`);
   if (fs.existsSync(unpackedPath)) {
+    console.log(`[DEBUG] Unpacked path EXISTS. Using it.`);
     playwrightPath = unpackedPath;
+  } else {
+    console.log(`[DEBUG] Unpacked path DOES NOT exist.`);
   }
 }
 
+console.log(`[DEBUG] Requiring playwright from: ${playwrightPath}`);
 const { chromium } = require(playwrightPath);
 
 import { login } from '../src/automation/utils/auth.js';

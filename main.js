@@ -154,8 +154,8 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
   
   const desktop = getDesktopPath();
 
-  const env = { 
-    ...process.env, 
+  const envParams = { 
+    ...process.env,
     ONVIO_USER: params.user,
     ONVIO_PASS: params.password,
     ONVIO_COMPANY: params.companyName,
@@ -170,7 +170,7 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
   };
 
   const child = spawn(process.execPath, [scriptPath], { 
-    env,
+    env: envParams,
     windowsHide: true
   });
 
