@@ -17,7 +17,7 @@ if (!USER || !PASS || !COMPANY || !MONTH || !YEAR) {
 
 async function run() {
   console.log(`[LOG] Iniciando descarga de Totales Generales para: ${ALIAS} (${MONTH}/${YEAR})`);
-  const browser = await chromium.launch({ headless: false }); 
+  const browser = await chromium.launch({ headless: true }); 
   const context = await browser.newContext();
   const page = await context.newPage();
 

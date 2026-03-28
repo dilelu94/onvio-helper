@@ -18,7 +18,7 @@ if (!USER || !PASS || !COMPANY || !ALIAS || !MONTH || !YEAR) {
 
 async function run() {
   console.log(`[INICIO] Liquidaciones: ${COMPANY} (${MONTH}/${YEAR})`);
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
   const page = await context.newPage();
 
