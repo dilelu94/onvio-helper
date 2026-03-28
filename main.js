@@ -139,7 +139,8 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
     TARGET_YEAR: params.year,
     MONTO_ACTUALIZAR: params.updateValue,
     TARGET_DATE: params.updateDate,
-    DESKTOP_PATH: desktop
+    DESKTOP_PATH: desktop,
+    ELECTRON_RUN_AS_NODE: '1' // Fuerza a Electron a actuar como Node.js puro
   };
 
   const child = spawn(process.execPath, [scriptPath], { 
