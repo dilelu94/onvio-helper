@@ -123,30 +123,18 @@ ipcMain.on('db-add-record', (event, data) => {
 });
 
 ipcMain.on('run-script', (event, { scriptName, params }) => {
-  // Ruta agnóstica al OS y compatible con ASAR Unpack
-  let scriptPath;
-  
-  if (app.isPackaged) {
-    // En producción (Windows exe), los archivos desempaquetados están en la carpeta 'resources'
-    scriptPath = path.join(process.resourcesPath, 'scripts', scriptName);
-  } else {
-    // En desarrollo
-    scriptPath = path.join(__dirname, 'scripts', scriptName);
-  }
+  // Con extraResources, los archivos están directamente en la carpeta 'resources' de la app instalada
+  const scriptPath = app.isPackaged 
+    ? path.join(process.resourcesPath, 'scripts', scriptName)
+    : path.join(__dirname, 'scripts', scriptName);
     
   console.log('Intentando ejecutar script en:', scriptPath);
 
   // Verificación de seguridad robusta
   if (!fs.existsSync(scriptPath)) {
-    // Intento alternativo por si asarUnpack cambió la estructura
-    const fallbackPath = path.join(process.resourcesPath, 'app.asar.unpacked', 'scripts', scriptName);
-    if (app.isPackaged && fs.existsSync(fallbackPath)) {
-      scriptPath = fallbackPath;
-    } else {
-      const errorMsg = `ERROR CRÍTICO: No se encontró el archivo del script.\nRuta buscada: ${scriptPath}\n¿Existe la carpeta scripts?: ${fs.existsSync(path.dirname(scriptPath))}`;
-      mainWindow.webContents.send('script-log', errorMsg);
-      return;
-    }
+    const errorMsg = `ERROR CRÍTICO: No se encontró el archivo del script.\nRuta buscada: ${scriptPath}\n¿Existe la carpeta scripts?: ${fs.existsSync(path.dirname(scriptPath))}`;
+    mainWindow.webContents.send('script-log', errorMsg);
+    return;
   }
   
   const env = { 
