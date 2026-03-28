@@ -1,6 +1,6 @@
 {
   "name": "onvio-svco",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "type": "module",
   "scripts": {
     "test": "playwright test",
