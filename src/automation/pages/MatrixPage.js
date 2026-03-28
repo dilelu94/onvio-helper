@@ -1,11 +1,7 @@
-import { Page, Locator } from '@playwright/test';
 import { KendoGrid } from '../components/KendoGrid';
 
 export class MatrixPage {
-  private readonly page: Page;
-  private readonly grid: KendoGrid;
-
-  constructor(page: Page) {
+  constructor(page) {
     this.page = page;
     this.grid = new KendoGrid(page);
   }
@@ -22,7 +18,7 @@ export class MatrixPage {
    * Finds and filters a matrix by its code.
    * @param code - The matrix code (e.g., 'ARTFIJA' or 'SCVO').
    */
-  async filterMatrixByCode(code: string) {
+  async filterMatrixByCode(code) {
     console.log(`Filtrando matriz: ${code}...`);
     await this.grid.filterByColumn('Código', code);
   }
@@ -31,7 +27,7 @@ export class MatrixPage {
    * Initiates the editing process for a specific matrix.
    * @param code - The matrix code.
    */
-  async editMatrix(code: string) {
+  async editMatrix(code) {
     const row = this.grid.getRowByText(code);
     await row.waitFor({ state: 'visible', timeout: 10000 });
     await this.grid.editRow(row);
@@ -61,7 +57,7 @@ export class MatrixPage {
    * @param date - The target date.
    * @param value - The new value.
    */
-  async fillMatrixValue(date: string, value: string) {
+  async fillMatrixValue(date, value) {
     await this.page.getByText('Valor de la Matriz', { exact: true }).waitFor({ state: 'visible' });
     
     console.log(`Escribiendo Fecha: ${date}`);
@@ -90,7 +86,7 @@ export class MatrixPage {
    * Handles duplicate entry errors by canceling the modal if needed.
    * Returns true if a duplicate was handled.
    */
-  async handleDuplicateError(): Promise<boolean> {
+  async handleDuplicateError() {
     const errorMsg = this.page.getByText('La fecha y el tope estan repetidos para la matriz');
     await this.page.waitForTimeout(500);
     if (await errorMsg.isVisible()) {

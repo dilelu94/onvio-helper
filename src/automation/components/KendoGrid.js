@@ -1,10 +1,5 @@
-import { Locator, Page } from '@playwright/test';
-
 export class KendoGrid {
-  private readonly page: Page;
-  private readonly grid: Locator;
-
-  constructor(page: Page, selector: string = 'div.k-grid') {
+  constructor(page, selector = 'div.k-grid') {
     this.page = page;
     this.grid = page.locator(selector);
   }
@@ -14,7 +9,7 @@ export class KendoGrid {
    * @param columnName - The text of the column header to filter.
    * @param value - The value to filter by.
    */
-  async filterByColumn(columnName: string, value: string) {
+  async filterByColumn(columnName, value) {
     const headerCell = this.grid.locator('th').filter({ hasText: columnName });
     const filterIcon = headerCell.locator('.k-grid-filter');
     
@@ -34,7 +29,7 @@ export class KendoGrid {
    * Finds a row that contains specific text and returns it.
    * @param text - The text to look for in the row.
    */
-  getRowByText(text: string): Locator {
+  getRowByText(text) {
     return this.grid.locator('tr').filter({ hasText: text }).first();
   }
 
@@ -42,7 +37,7 @@ export class KendoGrid {
    * Clicks the "Editar" link within a specific row.
    * @param row - The row locator.
    */
-  async editRow(row: Locator) {
+  async editRow(row) {
     await row.click();
     await this.page.getByRole('link', { name: 'Editar' }).click();
   }
