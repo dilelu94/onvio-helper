@@ -18,18 +18,31 @@ const { autoUpdater } = require('electron-updater');
 let mainWindow;
 
 function createWindow() {
-  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+  // Intentar leer la versión desde package.json (funciona en dev y prod si se incluye en files)
+  let version = app.getVersion();
+  try {
+    const pkgPath = path.join(__dirname, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      version = pkg.version;
+    }
+  } catch (e) {
+    console.error('Error leyendo package.json para la versión:', e);
+  }
   
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 850,
-    title: `Onvio Helper v${pkg.version} 🚀`,
+    title: `Onvio Helper v${version} 🚀`,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
   });
+
+  // Asegurar que el título no cambie después de cargar el contenido
+  mainWindow.on('page-title-updated', (e) => e.preventDefault());
 
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:5173');
@@ -64,7 +77,6 @@ const getDesktopPath = () => app.getPath('desktop');
 
 const getConfigPath = () => {
   const p = path.join(getRootPath(), 'config.json');
-  console.log('Ruta de configuración:', p);
   return p;
 };
 
@@ -72,25 +84,25 @@ const getDbPath = () => path.join(getRootPath(), 'database.xlsx');
 
 ipcMain.handle('load-config', () => {
   const configPath = getConfigPath();
-  console.log('Intentando cargar configuración desde:', configPath);
   if (fs.existsSync(configPath)) {
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    console.log('Configuración cargada con éxito. Empresas:', config.companies?.length || 0);
-    if (config.password && safeStorage.isEncryptionAvailable()) {
-      try {
-        const buffer = Buffer.from(config.password, 'base64');
-        config.password = safeStorage.decryptString(buffer);
-      } catch (e) { console.error('Error decrypt:', e); }
+    try {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (config.password && safeStorage.isEncryptionAvailable()) {
+        try {
+          const buffer = Buffer.from(config.password, 'base64');
+          config.password = safeStorage.decryptString(buffer);
+        } catch (e) { console.error('Error decrypt:', e); }
+      }
+      return config;
+    } catch (e) {
+      console.error('Error parsing config.json:', e);
     }
-    return config;
   }
-  console.log('No se encontró archivo de configuración.');
   return { user: '', password: '', companies: [] };
 });
 
 ipcMain.on('save-config', (event, config) => {
   const configPath = getConfigPath();
-  console.log('Guardando configuración en:', configPath);
   const configToSave = { ...config };
   if (configToSave.password && safeStorage.isEncryptionAvailable()) {
     try {
@@ -99,7 +111,6 @@ ipcMain.on('save-config', (event, config) => {
     } catch (e) { console.error('Error encrypt:', e); }
   }
   fs.writeFileSync(configPath, JSON.stringify(configToSave, null, 2));
-  console.log('Configuración guardada. Empresas:', configToSave.companies?.length || 0);
 });
 
 // --- EXCEL DB HANDLERS ---
@@ -129,6 +140,8 @@ ipcMain.on('db-add-record', (event, data) => {
 });
 
 ipcMain.on('run-script', (event, { scriptName, params }) => {
+  // En producción (dentro de asar), los scripts están en resources/app.asar/scripts/
+  // o si están fuera de asar (descomprimidos), en resources/app/scripts/
   const scriptPath = path.join(__dirname, 'scripts', scriptName);
   const desktop = getDesktopPath();
   
@@ -148,21 +161,22 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
 
   const child = spawn(process.execPath, [scriptPath], { 
     env,
-    // En versiones empaquetadas, necesitamos asegurar que el hijo hereda el entorno correcto
     stdio: ['inherit', 'pipe', 'pipe'] 
   });
 
   child.stdout.on('data', (data) => {
-    mainWindow.webContents.send('script-log', data.toString());
+    if (mainWindow) mainWindow.webContents.send('script-log', data.toString());
   });
 
   child.stderr.on('data', (data) => {
-    mainWindow.webContents.send('script-log', `ERROR: ${data.toString()}`);
+    if (mainWindow) mainWindow.webContents.send('script-log', `ERROR: ${data.toString()}`);
   });
 
   child.on('close', (code) => {
-    mainWindow.webContents.send('script-log', `\n[FIN] Script finalizado con código ${code}\n`);
-    mainWindow.webContents.send('script-finished', code);
+    if (mainWindow) {
+      mainWindow.webContents.send('script-log', `\n[FIN] Script finalizado con código ${code}\n`);
+      mainWindow.webContents.send('script-finished', code);
+    }
   });
 });
 
