@@ -164,7 +164,8 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
     TARGET_YEAR: params.year,
     MONTO_ACTUALIZAR: params.updateValue,
     TARGET_DATE: params.updateDate,
-    DESKTOP_PATH: desktop,
+    DESKTOP_PATH: getDesktopPath(),
+    RESOURCES_PATH: process.resourcesPath,
     ELECTRON_RUN_AS_NODE: '1'
   };
 

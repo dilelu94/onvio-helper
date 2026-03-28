@@ -1,11 +1,18 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 import path from 'path';
+import fs from 'fs';
 
-// Buscar playwright en asar.unpacked si estamos en producción
-const playwrightPath = process.env.ELECTRON_RUN_AS_NODE && process.resourcesPath
-  ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'playwright')
-  : 'playwright';
+// Buscar playwright en asar.unpacked si estamos en producción (usando RESOURCES_PATH pasado desde Electron)
+const resourcesPath = process.env.RESOURCES_PATH || process.resourcesPath;
+let playwrightPath = 'playwright';
+
+if (resourcesPath) {
+  const unpackedPath = path.join(resourcesPath, 'app.asar.unpacked', 'node_modules', 'playwright');
+  if (fs.existsSync(unpackedPath)) {
+    playwrightPath = unpackedPath;
+  }
+}
 
 const { chromium } = require(playwrightPath);
 
