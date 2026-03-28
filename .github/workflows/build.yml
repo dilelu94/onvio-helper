@@ -36,6 +36,9 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Bundle Automation Scripts
+        run: npm run bundle:scripts
+
       - name: Build and Publish Electron
         run: npx electron-builder --publish always
         env:
