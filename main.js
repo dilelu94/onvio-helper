@@ -123,16 +123,23 @@ ipcMain.on('db-add-record', (event, data) => {
 });
 
 ipcMain.on('run-script', (event, { scriptName, params }) => {
-  // Con extraResources, los archivos están directamente en la carpeta 'resources' de la app instalada
+  // Ruta absoluta en Windows instalada
   const scriptPath = app.isPackaged 
     ? path.join(process.resourcesPath, 'scripts', scriptName)
     : path.join(__dirname, 'scripts', scriptName);
     
   console.log('Intentando ejecutar script en:', scriptPath);
 
-  // Verificación de seguridad robusta
+  // Verificación de seguridad con Debug Info
   if (!fs.existsSync(scriptPath)) {
-    const errorMsg = `ERROR CRÍTICO: No se encontró el archivo del script.\nRuta buscada: ${scriptPath}\n¿Existe la carpeta scripts?: ${fs.existsSync(path.dirname(scriptPath))}`;
+    let resourcesContent = [];
+    try {
+      resourcesContent = fs.readdirSync(process.resourcesPath);
+    } catch (e) {
+      resourcesContent = [`Error leyendo resources: ${e.message}`];
+    }
+
+    const errorMsg = `ERROR CRÍTICO: No se encontró el script.\nRuta: ${scriptPath}\nContenido de resources: [${resourcesContent.join(', ')}]`;
     mainWindow.webContents.send('script-log', errorMsg);
     return;
   }
