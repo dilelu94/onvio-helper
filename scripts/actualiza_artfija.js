@@ -23,20 +23,36 @@ if (resourcesPath) {
 console.log(`[DEBUG] Requiring playwright from: ${playwrightPath}`);
 const { chromium } = require(playwrightPath);
 
-import { login } from '../src/automation/utils/auth.js';
-import { MatrixPage } from '../src/automation/pages/MatrixPage.js';
-
-const { 
-  ONVIO_USER, 
-  ONVIO_PASS, 
-  ONVIO_COMPANY, 
-  MONTO_ACTUALIZAR, 
-  TARGET_DATE 
-} = process.env;
+import { execSync } from 'child_process';
 
 async function run() {
   console.log(`[LOG] Iniciando proceso ARTFIJA para: ${ONVIO_COMPANY}`);
-  const browser = await chromium.launch({ headless: true, slowMo: 100 });
+  
+  let browser;
+  try {
+    browser = await chromium.launch({ headless: true, slowMo: 100 });
+  } catch (error) {
+    if (error.message.includes('Executable doesn\'t exist') || error.message.includes('browserType.launch')) {
+      console.log(`[LOG] Navegador no encontrado. Intentando instalar Chromium...`);
+      try {
+        // Encontrar el CLI de playwright relativo al path del módulo
+        const playwrightRoot = path.dirname(require.resolve(path.join(playwrightPath, 'package.json')));
+        const cliPath = path.join(playwrightRoot, 'cli.js');
+        
+        console.log(`[DEBUG] Ejecutando: node ${cliPath} install chromium`);
+        execSync(`"${process.execPath}" "${cliPath}" install chromium`, { stdio: 'inherit' });
+        
+        console.log(`[LOG] Instalación finalizada. Reintentando inicio...`);
+        browser = await chromium.launch({ headless: true, slowMo: 100 });
+      } catch (installError) {
+        console.error(`[ERROR] No se pudo instalar el navegador: ${installError.message}`);
+        process.exit(1);
+      }
+    } else {
+      throw error;
+    }
+  }
+
   const context = await browser.newContext();
   const page = await context.newPage();
 
