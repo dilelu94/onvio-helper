@@ -323,8 +323,20 @@ const ConfigForm = () => {
             </div>
           </div>
 
-          <div style={{ marginTop: '20px', background: '#1e1e1e', color: '#4af626', padding: '15px', borderRadius: '8px', minHeight: '100px' }}>
-            {isRunning ? (<div><b>{currentCompanyStatus}</b><br/>{currentStep}</div>) : (finalSummary || 'Listo.')}
+          <div style={{ 
+            marginTop: '20px', 
+            background: '#1e1e1e', 
+            color: '#4af626', 
+            padding: '15px', 
+            borderRadius: '8px', 
+            height: '200px', 
+            overflowY: 'auto',
+            fontFamily: 'monospace',
+            fontSize: '0.85em',
+            whiteSpace: 'pre-wrap'
+          }}>
+            {accumulatedLogs || (isRunning ? 'Iniciando...' : 'Esperando comandos...')}
+            <div ref={el => el?.scrollIntoView({ behavior: 'smooth' })} />
           </div>
         </section>
       </div>
