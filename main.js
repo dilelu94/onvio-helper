@@ -123,12 +123,19 @@ ipcMain.on('db-add-record', (event, data) => {
 });
 
 ipcMain.on('run-script', (event, { scriptName, params }) => {
-  // En producción los scripts se desempaquetan en app.asar.unpacked
+  // process.resourcesPath apunta a la carpeta 'resources' de la instalación en Windows
   const scriptPath = app.isPackaged 
-    ? path.join(__dirname, '..', 'app.asar.unpacked', 'scripts', scriptName)
+    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'scripts', scriptName)
     : path.join(__dirname, 'scripts', scriptName);
     
-  const desktop = getDesktopPath();
+  console.log('Ejecutando script en:', scriptPath);
+
+  // Verificación de seguridad: ¿Existe el archivo?
+  if (!fs.existsSync(scriptPath)) {
+    const errorMsg = `ERROR: No se encontró el script en: ${scriptPath}`;
+    mainWindow.webContents.send('script-log', errorMsg);
+    return;
+  }
   
   const env = { 
     ...process.env, 
