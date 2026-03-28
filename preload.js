@@ -19,5 +19,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const listener = (event, code) => callback(code);
     ipcRenderer.on('script-finished', listener);
     return () => ipcRenderer.removeListener('script-finished', listener);
-  }
+  },
+
+  // Auto-Updater
+  onUpdateAvailable: (callback) => ipcRenderer.on('update_available', () => callback()),
+  onUpdateDownloaded: (callback) => ipcRenderer.on('update_downloaded', () => callback()),
+  onUpdateProgress: (callback) => ipcRenderer.on('update_progress', (event, progress) => callback(progress)),
+  onUpdateError: (callback) => ipcRenderer.on('update_error', (event, error) => callback(error)),
+  restartApp: () => ipcRenderer.send('restart_app')
 });

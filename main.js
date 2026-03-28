@@ -127,7 +127,10 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
     DESKTOP_PATH: desktop
   };
 
-  const child = spawn('node', [scriptPath], { env });
+  const child = spawn(process.execPath, [scriptPath], { 
+    env,
+    windowsHide: true
+  });
 
   child.stdout.on('data', (data) => {
     mainWindow.webContents.send('script-log', data.toString());
@@ -141,6 +144,43 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
     mainWindow.webContents.send('script-log', `\n[FIN] Script finalizado con código ${code}\n`);
     mainWindow.webContents.send('script-finished', code);
   });
+});
+
+// --- AUTO-UPDATER EVENTS ---
+
+autoUpdater.on('checking-for-update', () => {
+  console.log('Buscando actualizaciones...');
+});
+
+autoUpdater.on('update-available', (info) => {
+  console.log('Actualización disponible:', info.version);
+  mainWindow.webContents.send('update_available');
+});
+
+autoUpdater.on('update-not-available', (info) => {
+  console.log('No hay actualizaciones disponibles.');
+});
+
+autoUpdater.on('error', (err) => {
+  console.error('Error en el auto-updater:', err);
+  mainWindow.webContents.send('update_error', err.message);
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+  let log_message = "Velocidad: " + progressObj.bytesPerSecond;
+  log_message = log_message + ' - Descargado ' + progressObj.percent + '%';
+  log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+  console.log(log_message);
+  mainWindow.webContents.send('update_progress', progressObj.percent);
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  console.log('Actualización descargada.');
+  mainWindow.webContents.send('update_downloaded');
+});
+
+ipcMain.on('restart_app', () => {
+  autoUpdater.quitAndInstall();
 });
 
 app.whenReady().then(createWindow);

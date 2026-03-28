@@ -9,8 +9,20 @@ class ScriptRunner {
    */
   async run(command, onData) {
     return new Promise((resolve, reject) => {
-      // Usamos shell: true para manejar comandos complejos en Windows
-      const child = spawn(command, { shell: true });
+      // Fix ENOENT: Use current process.execPath (Electron) instead of global 'node'
+      // If the command starts with 'node ', we replace it.
+      let finalCommand = command;
+      let args = [];
+      
+      if (command.startsWith('node ')) {
+        finalCommand = process.execPath;
+        args = command.split(' ').slice(1);
+      }
+
+      const child = spawn(finalCommand, args, { 
+        shell: true,
+        windowsHide: true
+      });
 
       child.stdout.on('data', (data) => {
         if (onData) onData(data.toString());
