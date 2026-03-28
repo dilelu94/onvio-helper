@@ -130,16 +130,31 @@ ipcMain.on('run-script', (event, { scriptName, params }) => {
     
   console.log('Intentando ejecutar script en:', scriptPath);
 
-  // Verificación de seguridad con Debug Info
+  // Verificación de seguridad con Super Diagnostic Info
   if (!fs.existsSync(scriptPath)) {
     let resourcesContent = [];
     try {
       resourcesContent = fs.readdirSync(process.resourcesPath);
     } catch (e) {
-      resourcesContent = [`Error leyendo resources: ${e.message}`];
+      resourcesContent = [`Err: ${e.message}`];
     }
 
-    const errorMsg = `ERROR CRÍTICO: No se encontró el script.\nRuta: ${scriptPath}\nContenido de resources: [${resourcesContent.join(', ')}]`;
+    const diagInfo = {
+      isPackaged: app.isPackaged,
+      execPath: process.execPath,
+      resourcesPath: process.resourcesPath,
+      appPath: app.getAppPath(),
+      dirname: __dirname,
+      targetScript: scriptPath,
+      resourcesList: resourcesContent
+    };
+
+    const errorMsg = `❌ ERROR DE RUTA:\n` +
+                     `Buscado: ${diagInfo.targetScript}\n` +
+                     `Resources: [${diagInfo.resourcesList.join(', ')}]\n` +
+                     `AppPath: ${diagInfo.appPath}\n` +
+                     `Exec: ${diagInfo.execPath}`;
+                     
     mainWindow.webContents.send('script-log', errorMsg);
     return;
   }

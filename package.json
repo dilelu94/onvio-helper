@@ -1,6 +1,6 @@
 {
   "name": "onvio-helper",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Onvio 'artfija' matrix update automation",
   "main": "main.js",
   "repository": {
@@ -36,7 +36,13 @@
     },
     "asar": true,
     "extraResources": [
-      "scripts/**"
+      {
+        "from": "scripts",
+        "to": "scripts",
+        "filter": [
+          "**/*"
+        ]
+      }
     ],
     "directories": {
       "output": "dist_electron"
