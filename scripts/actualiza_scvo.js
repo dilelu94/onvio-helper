@@ -24,6 +24,8 @@ console.log(`[DEBUG] Requiring playwright from: ${playwrightPath}`);
 const { chromium } = require(playwrightPath);
 
 import { execSync } from 'child_process';
+import { login } from '../src/automation/utils/auth.js';
+import { MatrixPage } from '../src/automation/pages/MatrixPage.js';
 
 async function run() {
   const { 
