@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, safeStorage } from 'electron';
+import { app, BrowserWindow, ipcMain, safeStorage, Menu } from 'electron';
 import { createRequire } from 'module';
 import path from 'path';
 import fs from 'fs';
@@ -7,25 +7,37 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import ExcelDB from './src/services/ExcelDB.js';
 
+// Leer version desde package.json
+const require = createRequire(import.meta.url);
+const pkg = require('./package.json');
+
 // En ESM no existe __dirname por defecto, lo definimos así:
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Para autoUpdater si usa commonjs internamente
-const require = createRequire(import.meta.url);
 const { autoUpdater } = require('electron-updater');
 
 let mainWindow;
 
 function createWindow() {
+  // Eliminar el menú superior (File, Edit, etc)
+  Menu.setApplicationMenu(null);
+
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 850,
+    title: `Onvio Helper v${pkg.version}`,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
+  });
+
+  // Asegurar que el título no cambie por el HTML
+  mainWindow.on('page-title-updated', (e) => {
+    e.preventDefault();
   });
 
   if (process.env.NODE_ENV === 'development') {
