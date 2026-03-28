@@ -1,6 +1,6 @@
 {
   "name": "onvio-helper",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "Onvio 'artfija' matrix update automation",
   "main": "main.js",
   "repository": {
@@ -34,6 +34,11 @@
       ],
       "icon": "build/icon.png"
     },
+    "asar": true,
+    "asarUnpack": [
+      "scripts/**/*",
+      "node_modules/playwright-core/**/*"
+    ],
     "directories": {
       "output": "dist_electron"
     },
@@ -41,6 +46,7 @@
       "dist/**/*",
       "src/**/*",
       "scripts/**/*",
+      "resultados_a_esperar/**/*",
       "build/**/*",
       "main.js",
       "preload.js",
@@ -52,7 +58,6 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^5.1.4",
@@ -60,7 +65,6 @@
     "electron": "^40.7.0",
     "electron-builder": "^26.8.1",
     "jsdom": "^28.1.0",
-    "playwright": "^1.58.2",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3",
     "vite": "^7.3.1",
@@ -69,6 +73,8 @@
   "dependencies": {
     "dotenv": "^17.3.1",
     "electron-updater": "^6.8.3",
+    "playwright": "^1.58.2",
+    "@playwright/test": "^1.58.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "xlsx": "^0.18.5"

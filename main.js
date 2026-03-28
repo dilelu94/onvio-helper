@@ -123,7 +123,11 @@ ipcMain.on('db-add-record', (event, data) => {
 });
 
 ipcMain.on('run-script', (event, { scriptName, params }) => {
-  const scriptPath = path.join(__dirname, 'scripts', scriptName);
+  // En producción los scripts se desempaquetan en app.asar.unpacked
+  const scriptPath = app.isPackaged 
+    ? path.join(__dirname, '..', 'app.asar.unpacked', 'scripts', scriptName)
+    : path.join(__dirname, 'scripts', scriptName);
+    
   const desktop = getDesktopPath();
   
   const env = { 
