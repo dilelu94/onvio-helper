@@ -1,4 +1,4 @@
-import { KendoGrid } from '../components/KendoGrid';
+import { KendoGrid } from '../components/KendoGrid.js';
 
 export class MatrixPage {
   page;

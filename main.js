@@ -91,6 +91,27 @@ ipcMain.handle('check-for-updates', () => {
   return null;
 });
 
+ipcMain.on('install-browsers', (event) => {
+  const child = spawn('npx', ['playwright', 'install', 'chromium'], { 
+    shell: true,
+    stdio: ['inherit', 'pipe', 'pipe'] 
+  });
+
+  child.stdout.on('data', (data) => {
+    if (mainWindow) mainWindow.webContents.send('script-log', data.toString());
+  });
+
+  child.stderr.on('data', (data) => {
+    if (mainWindow) mainWindow.webContents.send('script-log', data.toString());
+  });
+
+  child.on('close', (code) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('script-log', `\n[FIN] Instalación de navegadores finalizada con código ${code}\n`);
+    }
+  });
+});
+
 const getRootPath = () => app.getPath('userData');
 const getDesktopPath = () => app.getPath('desktop');
 

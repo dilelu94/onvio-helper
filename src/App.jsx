@@ -1,5 +1,5 @@
 import React from 'react'
-import ConfigForm from './components/ConfigForm'
+import ConfigForm from './components/ConfigForm.jsx'
 
 function App() {
   return (

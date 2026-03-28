@@ -425,8 +425,21 @@ const ConfigForm = () => {
             <form onSubmit={handleSaveCreds}>
               <input type="text" value={tempUser} onChange={e => setTempUser(e.target.value)} placeholder="Email" style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
               <input type="password" value={tempPassword} onChange={e => setTempPassword(e.target.value)} placeholder="Pass" style={{ width: '100%', marginBottom: '20px', padding: '8px' }} />
-              <button type="submit">Guardar</button>
-              <button type="button" onClick={() => setShowConfigModal(false)}>Cerrar</button>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                <button type="submit" style={{ flex: 1, background: '#4CAF50', color: 'white', border: 'none', padding: '10px', borderRadius: '5px' }}>Guardar</button>
+                <button type="button" onClick={() => setShowConfigModal(false)} style={{ flex: 1, padding: '10px', borderRadius: '5px' }}>Cerrar</button>
+              </div>
+              <hr />
+              <div style={{ marginTop: '20px' }}>
+                <p style={{ fontSize: '0.85em', color: '#666' }}>Si los navegadores no funcionan:</p>
+                <button type="button" onClick={() => {
+                  setAccumulatedLogs(prev => prev + '\n[SISTEMA] Iniciando instalación de navegadores...\n');
+                  window.electronAPI.installBrowsers();
+                  setShowConfigModal(false);
+                }} style={{ width: '100%', padding: '10px', background: '#333', color: 'white', border: 'none', borderRadius: '5px' }}>
+                  🛠️ Instalar Navegadores Playwright
+                </button>
+              </div>
             </form>
           </div>
         </div>
