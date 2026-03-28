@@ -92,7 +92,7 @@ ipcMain.handle('db-check-record', (event, { alias, period, type }) => {
 
 ipcMain.handle('check-file-exists', (event, { year, period, alias, type }) => {
   const desktop = getDesktopPath();
-  const typeFolder = type === 'Totales' ? 'Totales Generales' : 'Liquidaciones';
+  const typeFolder = "Liquidaciones";
   const fileName = type === 'Totales' ? 'Planilla_Totales_Generales.pdf' : 'Liquidaciones_Detalladas.xlsx';
   
   const filePath = path.join(

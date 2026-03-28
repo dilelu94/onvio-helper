@@ -105,7 +105,7 @@ async function run() {
         // --- NUEVA LÓGICA DE CARPETAS JERÁRQUICA EN ROOT ---
         const projectRoot = process.env.DESKTOP_PATH;
         // yearFolder removed
-        const periodFolder = path.join(projectRoot, `${MONTH} ${YEAR} Totales Generales`);
+        const periodFolder = path.join(projectRoot, "Liquidaciones", `${MONTH} ${YEAR}`);
         const targetDir = path.join(periodFolder, ALIAS.replace(/[^a-z0-9 ]/gi, ' ').trim());
 
         if (!fs.existsSync(targetDir)) {
