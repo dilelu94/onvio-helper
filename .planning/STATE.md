@@ -6,9 +6,9 @@ Core value: Automation for efficiency and consistency.
 Current focus: Transitioning from Research to Project Definition/Roadmapping.
 
 ## Current Position
-Phase: 5 of 5 - Ecosystem Expansion & External Tools
+Phase: 5 of 6 - Ecosystem Expansion & External Tools
 Plan: 05-01-PLAN.md — pnpm and airi Setup
-Status: 🚀 Integrating external tools and projects into the environment. airi repository is present in ~/repos/airi.
+Status: 🚀 Integrating external tools and projects into the environment. airi repository is present in ~/repos/airi. New Phase 6 (Dotfiles) added to the roadmap.
 
 ## Progress
 [█████░░░░░] 50% (Environment setup complete)
@@ -17,9 +17,12 @@ Status: 🚀 Integrating external tools and projects into the environment. airi 
 - Adopt an enhanced Page Object Model (POM) for modularity.
 - Abstract reusable Kendo UI components.
 - Focus on robust, role-based Playwright selectors.
+- Installed pnpm via official script for better alignment with project goals.
+- Cloned airi to ~/repos/airi to keep external projects organized.
+- Dedicated a new phase (Phase 6) for system configuration management via GNU Stow.
 
 ## Pending Todos
-- No pending todos.
+- [ ] Implement Phase 6: Dotfiles Management (stow, git, backup).
 
 ## Blockers/Concerns
 - Managing Onvio's complex Kendo UI grids and asynchronous events.
@@ -28,5 +31,5 @@ Status: 🚀 Integrating external tools and projects into the environment. airi 
 ## Session Continuity
 Last session: March 27, 2026
 Stopped at: Research complete, SUMMARY.md generated.
-Session resumed: March 28, 2026, proceeding to Phase 1.
+Session resumed: March 28, 2026, proceeding to Phase 1. Added dotfiles setup plan.
 Resume file: N/A
