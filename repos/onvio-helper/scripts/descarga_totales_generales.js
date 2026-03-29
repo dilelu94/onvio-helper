@@ -41,7 +41,8 @@ async function run() {
   
   let browser;
   try {
-    browser = await chromium.launch({ headless: true, slowMo: 100 });
+    const isHeadless = process.env.HEADLESS !== 'false';
+    browser = await chromium.launch({ headless: isHeadless, slowMo: 100 });
   } catch (error) {
     if (error.message.includes('Executable doesn\'t exist') || error.message.includes('browserType.launch')) {
       console.log(`[LOG] Navegador no encontrado. Intentando instalar Chromium...`);
@@ -119,57 +120,32 @@ async function run() {
     await estudioPage.getByRole('button', { name: 'Aceptar' }).click();
     await estudioPage.waitForTimeout(2000);
 
-    // 5. EMISIÓN Y CAPTURA BINARIA
-    console.log('[LOG] Emitiendo reporte y capturando PDF...');
+    // 5. EMISIÓN Y DESCARGA NATIVA
+    console.log('[LOG] Emitiendo reporte y esperando descarga...');
+    
+    // Preparar la captura de la descarga antes de hacer clic
+    const downloadPromise = estudioPage.waitForEvent('download', { timeout: 60000 });
+    
     await estudioPage.getByRole('button', { name: 'Emitir' }).click();
 
-    let reportPage = null;
-    const globalTimeout = Date.now() + 60000;
-    while (Date.now() < globalTimeout && !reportPage) {
-      for (const p of context.pages()) {
-        try {
-          if (p.url().startsWith('blob:')) {
-            const isCorrect = await p.evaluate(async (u) => {
-              try {
-                const resp = await fetch(u);
-                const blob = await resp.blob();
-                const text = await blob.text();
-                return text.includes('Planilla de Totales Generales') || text.includes('Totales Gral');
-              } catch (e) { return false; }
-            }, p.url());
-            if (isCorrect) { reportPage = p; break; }
-          }
-        } catch (e) {}
+    try {
+      const download = await downloadPromise;
+      
+      const projectRoot = process.env.DESKTOP_PATH;
+      const periodFolder = path.join(projectRoot, "Liquidaciones", `${MONTH} ${YEAR}`);
+      const targetDir = path.join(periodFolder, ALIAS.replace(/[^a-z0-9 ]/gi, ' ').trim());
+
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
       }
-      if (!reportPage) await new Promise(r => setTimeout(r, 3000));
-    }
 
-    if (reportPage) {
-        const projectRoot = process.env.DESKTOP_PATH;
-        const periodFolder = path.join(projectRoot, "Liquidaciones", `${MONTH} ${YEAR}`);
-        const targetDir = path.join(periodFolder, ALIAS.replace(/[^a-z0-9 ]/gi, ' ').trim());
-
-        if (!fs.existsSync(targetDir)) {
-          fs.mkdirSync(targetDir, { recursive: true });
-        }
-
-        const savePath = path.join(targetDir, `Planilla_Totales_Generales.pdf`);
-        
-        const base64Data = await reportPage.evaluate(async () => {
-            const resp = await fetch(window.location.href);
-            const b = await resp.blob();
-            return new Promise(res => {
-                const rd = new FileReader();
-                rd.onloadend = () => res(rd.result.split(',')[1]);
-                rd.readAsDataURL(b);
-            });
-        });
-
-        fs.writeFileSync(savePath, Buffer.from(base64Data, 'base64'));
-        console.log(`[SUCCESS] PDF guardado en: ${savePath}`);
-        process.exit(0);
-    } else {
-        throw new Error('No se encontró el PDF.');
+      const savePath = path.join(targetDir, `Planilla_Totales_Generales.pdf`);
+      await download.saveAs(savePath);
+      
+      console.log(`[SUCCESS] PDF guardado en: ${savePath}`);
+      process.exit(0);
+    } catch (e) {
+      throw new Error('No se detectó la descarga automática del PDF. ' + e.message);
     }
 
   } catch (error) {
