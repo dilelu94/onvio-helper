@@ -13,7 +13,7 @@
     "dev": "vite",
     "start": "NODE_ENV=development electron .",
     "build:vite": "vite build",
-    "bundle:scripts": "esbuild scripts/actualiza_scvo.js --bundle --platform=node --format=esm --outfile=dist_scripts/actualiza_scvo.js --external:playwright --external:playwright-core && esbuild scripts/actualiza_artfija.js --bundle --platform=node --format=esm --outfile=dist_scripts/actualiza_artfija.js --external:playwright --external:playwright-core",
+    "bundle:scripts": "esbuild scripts/actualiza_scvo.js scripts/actualiza_artfija.js scripts/descarga_totales_generales.js scripts/descarga_liquidaciones.js --bundle --platform=node --format=esm --outdir=dist_scripts --external:playwright --external:playwright-core",
     "build:electron": "electron-builder",
     "build": "npm run bundle:scripts && npm run build:vite && npm run build:electron",
     "preview": "vite preview"
