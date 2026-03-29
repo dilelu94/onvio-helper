@@ -1,6 +1,6 @@
 {
   "name": "onvio-helper",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Onvio 'artfija' matrix update automation",
   "main": "main.js",
   "repository": {

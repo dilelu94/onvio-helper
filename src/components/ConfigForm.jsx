@@ -284,7 +284,22 @@ const ConfigForm = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
         <section style={{ background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #eee' }}>
-          <h3>🏢 Empresas</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h3 style={{ margin: 0 }}>🏢 Empresas</h3>
+            {companies.length > 0 && (
+              <label style={{ fontSize: '0.85em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <input 
+                  type="checkbox" 
+                  checked={selectedCompanies.length === companies.length && companies.length > 0} 
+                  onChange={(e) => {
+                    if (e.target.checked) setSelectedCompanies(companies.map(c => c.id));
+                    else setSelectedCompanies([]);
+                  }} 
+                />
+                <b>Seleccionar Todas</b>
+              </label>
+            )}
+          </div>
           <div style={{ display: 'flex', gap: '5px', marginBottom: '15px' }}>
             <input placeholder="Nombre" value={newCompanyName} onChange={e => setNewCompanyName(e.target.value)} style={{ flex: 2, padding: '8px' }} />
             <input placeholder="Alias" value={newCompanyAlias} onChange={e => setNewCompanyAlias(e.target.value)} style={{ flex: 1, padding: '8px' }} />
