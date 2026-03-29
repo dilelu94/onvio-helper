@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import ConfigForm from './components/ConfigForm'
 
 function App() {
@@ -6,11 +6,17 @@ function App() {
   const [updateProgress, setUpdateProgress] = useState(0);
   const [updateDownloaded, setUpdateDownloaded] = useState(false);
   const [updateError, setUpdateError] = useState(null);
+  const [isChecking, setIsChecking] = useState(false);
+  
+  // Timer para reinicio automático
+  const [countdown, setCountdown] = useState(5);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     if (window.electronAPI) {
       window.electronAPI.onUpdateAvailable(() => {
         setUpdateAvailable(true);
+        setIsChecking(false);
       });
 
       window.electronAPI.onUpdateProgress((progress) => {
@@ -23,30 +29,79 @@ function App() {
 
       window.electronAPI.onUpdateError((err) => {
         setUpdateError(err);
+        setIsChecking(false);
       });
     }
   }, []);
 
+  // Efecto para el contador de reinicio automático
+  useEffect(() => {
+    if (updateDownloaded) {
+      setCountdown(5);
+      timerRef.current = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            handleRestart();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [updateDownloaded]);
+
   const handleRestart = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
     window.electronAPI.restartApp();
   };
 
+  const checkUpdates = () => {
+    setIsChecking(true);
+    setUpdateError(null);
+    window.electronAPI.checkUpdates();
+    // Timeout por si no hay respuesta rápida de la API
+    setTimeout(() => setIsChecking(false), 5000);
+  };
+
   return (
-    <div className="App">
-      {/* Modal de Actualización */}
+    <div className="App" style={{ position: 'relative', height: '100vh' }}>
+      {/* Botón de búsqueda manual en la esquina superior derecha */}
+      <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 100 }}>
+        <button 
+          onClick={checkUpdates}
+          disabled={isChecking}
+          style={{
+            padding: '8px 15px',
+            backgroundColor: isChecking ? '#95a5a6' : '#3498db',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: isChecking ? 'default' : 'pointer',
+            fontSize: '12px'
+          }}
+        >
+          {isChecking ? 'Buscando...' : '🔄 Buscar Actualización'}
+        </button>
+      </div>
+
+      {/* Modal de Actualización TOTALMENTE BLOQUEANTE */}
       {(updateAvailable || updateDownloaded || updateError) && (
         <div style={{
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0,0,0,0.85)',
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0,0,0,0.9)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 9999,
+          zIndex: 10000, // Por encima de todo
           color: 'white',
           textAlign: 'center',
           padding: '20px'
@@ -55,7 +110,7 @@ function App() {
             backgroundColor: '#2c3e50',
             padding: '40px',
             borderRadius: '15px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+            boxShadow: '0 10px 50px rgba(0,0,0,0.8)',
             maxWidth: '500px',
             width: '90%'
           }}>
@@ -69,7 +124,7 @@ function App() {
               <div style={{ width: '100%', marginBottom: '20px' }}>
                 <div style={{
                   width: '100%',
-                  height: '15px',
+                  height: '20px',
                   backgroundColor: '#34495e',
                   borderRadius: '10px',
                   overflow: 'hidden'
@@ -81,7 +136,9 @@ function App() {
                     transition: 'width 0.3s ease'
                   }} />
                 </div>
-                <p style={{ marginTop: '10px' }}>{Math.round(updateProgress)}%</p>
+                <p style={{ marginTop: '15px', fontSize: '18px', fontWeight: 'bold' }}>
+                  {Math.round(updateProgress)}%
+                </p>
               </div>
             )}
 
@@ -90,29 +147,33 @@ function App() {
             )}
 
             {updateDownloaded && (
-              <p style={{ marginBottom: '25px' }}>
-                La nueva versión se ha descargado correctamente. Debe reiniciar la aplicación para aplicar los cambios.
-              </p>
+              <>
+                <p style={{ marginBottom: '10px', fontSize: '16px' }}>
+                  La nueva versión se ha descargado correctamente.<br/>
+                  <strong>La aplicación se reiniciará automáticamente en {countdown} segundos.</strong>
+                </p>
+                <p style={{ marginBottom: '25px', fontSize: '14px', color: '#bdc3c7' }}>
+                  O presione el botón para hacerlo ahora mismo.
+                </p>
+              </>
             )}
 
             {(updateDownloaded || updateError) && (
               <button 
                 onClick={handleRestart}
                 style={{
-                  padding: '12px 30px',
-                  fontSize: '16px',
+                  padding: '15px 40px',
+                  fontSize: '18px',
                   backgroundColor: '#27ae60',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '5px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
                   fontWeight: 'bold',
-                  transition: 'background-color 0.2s'
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#2ecc71'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#27ae60'}
               >
-                {updateDownloaded ? 'Reiniciar y actualizar' : 'Cerrar aplicación'}
+                {updateDownloaded ? 'REINICIAR AHORA' : 'Cerrar y reintentar'}
               </button>
             )}
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import ConfigForm from './components/ConfigForm'
 
 function App() {
@@ -7,6 +7,10 @@ function App() {
   const [updateDownloaded, setUpdateDownloaded] = useState(false);
   const [updateError, setUpdateError] = useState(null);
   const [isChecking, setIsChecking] = useState(false);
+  
+  // Timer para reinicio automático
+  const [countdown, setCountdown] = useState(5);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     if (window.electronAPI) {
@@ -30,7 +34,28 @@ function App() {
     }
   }, []);
 
+  // Efecto para el contador de reinicio automático
+  useEffect(() => {
+    if (updateDownloaded) {
+      setCountdown(5);
+      timerRef.current = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            handleRestart();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [updateDownloaded]);
+
   const handleRestart = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
     window.electronAPI.restartApp();
   };
 
@@ -122,10 +147,15 @@ function App() {
             )}
 
             {updateDownloaded && (
-              <p style={{ marginBottom: '25px', fontSize: '16px' }}>
-                La nueva versión se ha descargado correctamente.<br/>
-                <strong>Debe reiniciar la aplicación ahora para aplicar los cambios.</strong>
-              </p>
+              <>
+                <p style={{ marginBottom: '10px', fontSize: '16px' }}>
+                  La nueva versión se ha descargado correctamente.<br/>
+                  <strong>La aplicación se reiniciará automáticamente en {countdown} segundos.</strong>
+                </p>
+                <p style={{ marginBottom: '25px', fontSize: '14px', color: '#bdc3c7' }}>
+                  O presione el botón para hacerlo ahora mismo.
+                </p>
+              </>
             )}
 
             {(updateDownloaded || updateError) && (
@@ -143,7 +173,7 @@ function App() {
                   boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
                 }}
               >
-                {updateDownloaded ? 'REINICIAR Y ACTUALIZAR AHORA' : 'Cerrar y reintentar'}
+                {updateDownloaded ? 'REINICIAR AHORA' : 'Cerrar y reintentar'}
               </button>
             )}
           </div>
