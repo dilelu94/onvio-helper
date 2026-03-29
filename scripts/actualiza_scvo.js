@@ -2,6 +2,7 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 import path from 'path';
 import fs from 'fs';
+import { execSync } from 'child_process';
 
 // Buscar playwright en asar.unpacked si estamos en producción (usando RESOURCES_PATH pasado desde Electron)
 const resourcesPath = process.env.RESOURCES_PATH || process.resourcesPath;
@@ -23,19 +24,18 @@ if (resourcesPath) {
 console.log(`[DEBUG] Requiring playwright from: ${playwrightPath}`);
 const { chromium } = require(playwrightPath);
 
-import { execSync } from 'child_process';
 import { login } from '../src/automation/utils/auth.js';
 import { MatrixPage } from '../src/automation/pages/MatrixPage.js';
 
-async function run() {
-  const { 
-    ONVIO_USER, 
-    ONVIO_PASS, 
-    ONVIO_COMPANY, 
-    MONTO_ACTUALIZAR, 
-    TARGET_DATE 
-  } = process.env;
+const { 
+  ONVIO_USER, 
+  ONVIO_PASS, 
+  ONVIO_COMPANY, 
+  MONTO_ACTUALIZAR, 
+  TARGET_DATE 
+} = process.env;
 
+async function run() {
   console.log(`[LOG] Iniciando proceso SCVO para: ${ONVIO_COMPANY}`);
   
   let browser;
@@ -45,13 +45,10 @@ async function run() {
     if (error.message.includes('Executable doesn\'t exist') || error.message.includes('browserType.launch')) {
       console.log(`[LOG] Navegador no encontrado. Intentando instalar Chromium...`);
       try {
-        // Encontrar el CLI de playwright relativo al path del módulo
         const playwrightRoot = path.dirname(require.resolve(path.join(playwrightPath, 'package.json')));
         const cliPath = path.join(playwrightRoot, 'cli.js');
-        
         console.log(`[DEBUG] Ejecutando: node ${cliPath} install chromium`);
         execSync(`"${process.execPath}" "${cliPath}" install chromium`, { stdio: 'inherit' });
-        
         console.log(`[LOG] Instalación finalizada. Reintentando inicio...`);
         browser = await chromium.launch({ headless: true, slowMo: 100 });
       } catch (installError) {
