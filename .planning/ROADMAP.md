@@ -42,6 +42,6 @@ Automate the 'artfija' matrix update process in Onvio using Playwright and a mod
 ## Phase 6: Dotfiles Management
 **Goal**: Set up a centralized dotfiles repository using GNU Stow for system configuration portability.
 **Plans:** 1 plan
-- [ ] 06-01-PLAN.md — GNU Stow Initialization & Repo Sync
+- [x] 06-01-PLAN.md — GNU Stow Initialization & Repo Sync
 **Success Criteria**: .bashrc and .gitconfig are managed by Stow and pushed to GitHub.
 **Requirements:** [DOTFILES-01]
