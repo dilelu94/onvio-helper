@@ -6,8 +6,8 @@ Automate the 'artfija' matrix update process in Onvio using Playwright and a mod
 ## Phase 1: Environment Setup & Scaffolding
 **Goal**: Set up the Playwright environment and initialize the enhanced POM structure.
 **Plans:** 2 plans
-- [ ] 01-01-PLAN.md — Core Playwright Initialization & Windows Baseline
-- [ ] 01-02-PLAN.md — Enhanced POM Scaffolding (TypeScript Migration)
+- [x] 01-01-PLAN.md — Core Playwright Initialization & Windows Baseline
+- [x] 01-02-PLAN.md — Enhanced POM Scaffolding (TypeScript Migration)
 
 **Success Criteria**: Playwright is running and the basic structure is ready for feature development.
 
@@ -31,3 +31,10 @@ Automate the 'artfija' matrix update process in Onvio using Playwright and a mod
 - [ ] Conduct final end-to-end tests for the complete matrix update.
 - [ ] Final documentation and code cleanup.
 - **Success Criteria**: A stable, documented automation solution for the 'artfija' matrix update.
+
+## Phase 5: Ecosystem Expansion & External Tools
+**Goal**: Integrate external tools and projects into the environment.
+**Plans:** 2 plans
+- [ ] 05-01-PLAN.md — pnpm and airi Setup
+- [ ] 05-02-PLAN.md — airi Configuration & Verification
+**Success Criteria**: pnpm is installed and airi repository is cloned and ready for use.
