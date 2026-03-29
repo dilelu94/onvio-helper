@@ -35,8 +35,8 @@ Automate the 'artfija' matrix update process in Onvio using Playwright and a mod
 ## Phase 5: Ecosystem Expansion & External Tools
 **Goal**: Integrate external tools and projects into the environment.
 **Plans:** 2 plans
-- [ ] 05-01-PLAN.md — pnpm and airi Setup
-- [ ] 05-02-PLAN.md — airi Configuration & Verification
+- [x] 05-01-PLAN.md — pnpm and airi Setup
+- [x] 05-02-PLAN.md — airi Configuration & Verification
 **Success Criteria**: pnpm is installed and airi repository is cloned and ready for use.
 
 ## Phase 6: Dotfiles Management

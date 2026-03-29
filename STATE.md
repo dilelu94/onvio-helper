@@ -7,6 +7,11 @@
 - **Bulk Selection:** Added a "Select All" checkbox in the companies list for easier selection management.
 - **GitHub Actions Fixes:** Updated `build.yml` to Node.js 22 LTS and added conditional publishing (`--publish always` only on tags) to resolve build concurrency errors.
 
+## Quick Tasks Completed
+- [x] **Install pnpm:** Installed via official script (v10.33.0).
+- [x] **Clone airi:** Repository cloned to `~/repos/airi`.
+- [x] **Setup airi:** Executed `pnpm install` in `~/repos/airi`.
+
 ## Current Project Version
 - **v1.5.3** (Commit: `7698cbf` / `d9a42d9`)
 
