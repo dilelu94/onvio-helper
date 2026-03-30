@@ -66,3 +66,10 @@ Automate the 'artfija' matrix update process in Onvio using Playwright and a mod
 - [x] 09-01-PLAN.md — Kokoro-FastAPI Installation & Setup
 **Success Criteria**: Kokoro-FastAPI is installed, models downloaded, and start script configured with CUDA support.
 **Requirements:** [KOKORO-01, KOKORO-02, KOKORO-03]
+
+## Phase 10: OpenAI Codex Library Installation
+**Goal**: Install the OpenAI library in the project to enable AI capabilities.
+**Plans:** 1 plan
+- [ ] 10-01-PLAN.md — Install OpenAI Library & Verify
+**Success Criteria**: OpenAI package is installed as a dependency and a verification script passes.
+**Requirements:** [OPENAI-01]
