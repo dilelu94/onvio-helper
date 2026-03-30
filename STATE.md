@@ -14,6 +14,7 @@
 - [x] **Remove local airi repo:** Repository `~/repos/airi/` deleted as requested to use the installed Flatpak version exclusively.
 - [x] **Whisper Server Config:** Generated optimized Docker Run command for `faster-whisper-server` (base, int8_float16, CUDA).
 - [x] **Whisper Aliases:** Added `whisper-server` and `whisper-stop` aliases to `~/.bashrc` and `Bazzite-dotfile/aliases.sh`.
+- [x] **OpenAI Library Installation:** Installed 'openai' package and added 'scripts/verify-openai.js' for verification.
 
 ## Current Project Version
 - **v1.5.3** (Commit: `7698cbf` / `d9a42d9`)
@@ -30,3 +31,4 @@
 | Install Speaches.ai locally (CUDA-env) | Completed | 2026-03-29 |
 | faster-whisper-server Docker config | Completed | 2026-03-30 |
 | faster-whisper-server aliases | Completed | 2026-03-30 |
+| Install openai package (Codex) | Completed | 2026-03-30 |
