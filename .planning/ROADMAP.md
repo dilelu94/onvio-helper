@@ -63,6 +63,6 @@ Automate the 'artfija' matrix update process in Onvio using Playwright and a mod
 ## Phase 9: Kokoro-FastAPI Installation
 **Goal**: Install Kokoro-FastAPI in ~/repos/Kokoro-FastAPI inside the 'cuda-env' distrobox.
 **Plans:** 1 plan
-- [ ] 09-01-PLAN.md — Kokoro-FastAPI Installation & Setup
+- [x] 09-01-PLAN.md — Kokoro-FastAPI Installation & Setup
 **Success Criteria**: Kokoro-FastAPI is installed, models downloaded, and start script configured with CUDA support.
 **Requirements:** [KOKORO-01, KOKORO-02, KOKORO-03]
