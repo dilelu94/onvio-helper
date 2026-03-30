@@ -9,8 +9,10 @@
 
 ## Quick Tasks Completed
 - [x] **Install pnpm:** Installed via official script (v10.33.0).
-- [x] **Clone airi:** Repository cloned to `~/repos/airi`.
-- [x] **Setup airi:** Executed `pnpm install` in `~/repos/airi`.
+- [x] **Correct Discord Token:** Changed `DISCORD_BOT_TOKEN` to `DISCORD_TOKEN` in `~/.bashrc` and `Bazzite-dotfile/aliases.sh` to allow Airi Flatpak to connect to Discord.
+- [x] **Robust Airi Alias:** Implemented automatic cleanup (killall + cache removal) in `airi` alias to prevent "Loading" issues after RAM crashes.
+- [x] **Remove local airi repo:** Repository `~/repos/airi/` deleted as requested to use the installed Flatpak version exclusively.
+- [x] **Whisper Server Config:** Generated optimized Docker Run command for `faster-whisper-server` (base, int8_float16, CUDA).
 
 ## Current Project Version
 - **v1.5.3** (Commit: `7698cbf` / `d9a42d9`)
@@ -21,4 +23,8 @@
 - [ ] **UI Refinement:** General pass on spacing and feedback to improve "intuitiveness."
 
 ---
-*Session closed on March 28, 2026.*
+*Session closed on March 29, 2026.*
+| Task | Status | Date |
+|---|---|---|
+| Install Speaches.ai locally (CUDA-env) | Completed | 2026-03-29 |
+| faster-whisper-server Docker config | Completed | 2026-03-30 |
