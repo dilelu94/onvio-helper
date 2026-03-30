@@ -31,4 +31,4 @@
 | Install Speaches.ai locally (CUDA-env) | Completed | 2026-03-29 |
 | faster-whisper-server Docker config | Completed | 2026-03-30 |
 | faster-whisper-server aliases | Completed | 2026-03-30 |
-| Install openai package (Codex) | Completed | 2026-03-30 |
+| Install OpenAI Codex CLI | Completed | 2026-03-30 |
