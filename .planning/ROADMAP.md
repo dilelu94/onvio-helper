@@ -45,3 +45,10 @@ Automate the 'artfija' matrix update process in Onvio using Playwright and a mod
 - [x] 06-01-PLAN.md — GNU Stow Initialization & Repo Sync
 **Success Criteria**: .bashrc and .gitconfig are managed by Stow and pushed to GitHub.
 **Requirements:** [DOTFILES-01]
+
+## Phase 7: Airi Connection Fix
+**Goal**: Fix the environment variable name for the Discord bot and clean up the environment.
+**Plans:** 1 plan
+- [ ] 07-01-PLAN.md — Correct Discord token and clean up Airi
+**Success Criteria**: The 'airi' alias uses the correct DISCORD_TOKEN variable and the repository is removed.
+**Requirements:** [AIRI-01]

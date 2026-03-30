@@ -6,9 +6,9 @@ Core value: Automation for efficiency and consistency.
 Current focus: Transitioning from Research to Project Definition/Roadmapping.
 
 ## Current Position
-Phase: 6 of 6 - Dotfiles Management
-Plan: 06-01-PLAN.md — dotfiles_setup
-Status: ✅ Phase 6 complete. Bazzite dotfiles repository is synchronized with GNU Stow and pushed to GitHub.
+Phase: 7 of 7 - Airi Connection Fix
+Plan: 07-01-PLAN.md — Correct Discord token and clean up Airi
+Status: 🕒 Planning complete. Ready to execute correction of Discord token environment variable and cleanup.
 
 ## Progress
 [██████████] 100% (Phase 6 complete - Project setup finalized)
@@ -21,17 +21,21 @@ Status: ✅ Phase 6 complete. Bazzite dotfiles repository is synchronized with G
 - Cloned airi to ~/repos/airi to keep external projects organized.
 - Dedicated a new phase (Phase 6) for system configuration management via GNU Stow.
 - Initialized ~/Bazzite-dotfile with GNU Stow and pushed to GitHub (no .gitignore).
+- Added MangoHud and btop configurations to ~/Bazzite-dotfile using the requested directory structure.
+- Used GNU Stow to link mangohud and btop configurations back to ~/.config/.
+- **Decision D-07-01**: Correct DISCORD_BOT_TOKEN to DISCORD_TOKEN in the airi alias per user requirement.
+- **Decision D-07-02**: Remove the local repos/airi repository and use the Flatpak version exclusively.
 
 ## Pending Todos
-- [x] Implement Phase 6: Dotfiles Management (stow, git, backup).
-- [ ] Resume implementation of automation phases (2-5).
+- [ ] Execute Phase 7: Airi Connection Fix.
+- [ ] Resume implementation of automation phases (2-4).
 
 ## Blockers/Concerns
 - Managing Onvio's complex Kendo UI grids and asynchronous events.
 - Handling session timeouts and specific data entry validation.
 
 ## Session Continuity
-Last session: March 27, 2026
-Stopped at: Research complete, SUMMARY.md generated.
-Session resumed: March 28, 2026, proceeding to Phase 1. Added dotfiles setup plan.
+Last session: March 28, 2026
+Stopped at: Phase 6 complete.
+Session resumed: March 29, 2026, proceeding to Phase 7 for Airi fix.
 Resume file: N/A
