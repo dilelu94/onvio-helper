@@ -49,6 +49,20 @@ Automate the 'artfija' matrix update process in Onvio using Playwright and a mod
 ## Phase 7: Airi Connection Fix
 **Goal**: Fix the environment variable name for the Discord bot and clean up the environment.
 **Plans:** 1 plan
-- [ ] 07-01-PLAN.md — Correct Discord token and clean up Airi
+- [x] 07-01-PLAN.md — Correct Discord token and clean up Airi (Handled in STATE.md)
 **Success Criteria**: The 'airi' alias uses the correct DISCORD_TOKEN variable and the repository is removed.
 **Requirements:** [AIRI-01]
+
+## Phase 8: Robust Airi Alias Implementation
+**Goal**: Implement a robust alias that cleans processes and cache before starting Airi.
+**Plans:** 1 plan
+- [ ] 08-01-PLAN.md — Robust Airi Alias Implementation
+**Success Criteria**: Alias 'airi' cleans cache and kills ghost processes before flatpak run.
+**Requirements:** [FIX-AIRI-01, FIX-AIRI-02, FIX-AIRI-03]
+
+## Phase 9: Kokoro-FastAPI Installation
+**Goal**: Install Kokoro-FastAPI in ~/repos/Kokoro-FastAPI inside the 'cuda-env' distrobox.
+**Plans:** 1 plan
+- [ ] 09-01-PLAN.md — Kokoro-FastAPI Installation & Setup
+**Success Criteria**: Kokoro-FastAPI is installed, models downloaded, and start script configured with CUDA support.
+**Requirements:** [KOKORO-01, KOKORO-02, KOKORO-03]
