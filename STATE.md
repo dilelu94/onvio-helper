@@ -14,7 +14,8 @@
 - [x] **Remove local airi repo:** Repository `~/repos/airi/` deleted as requested to use the installed Flatpak version exclusively.
 - [x] **Whisper Server Config:** Generated optimized Docker Run command for `faster-whisper-server` (base, int8_float16, CUDA).
 - [x] **Whisper Aliases:** Added `whisper-server` and `whisper-stop` aliases to `~/.bashrc` and `Bazzite-dotfile/aliases.sh`.
-- [x] **OpenAI Library Installation:** Installed 'openai' package and added 'scripts/verify-openai.js' for verification.
+- [x] **Install OpenAI Library:** Installed 'openai' package and added 'scripts/verify-openai.js' for verification.
+- [x] **Install Pot Translator AppImage:** Downloaded (v3.0.7) and configured for x86_64 as a native alternative to Translumo.
 
 ## Current Project Version
 - **v1.5.3** (Commit: `7698cbf` / `d9a42d9`)
@@ -32,3 +33,5 @@
 | faster-whisper-server Docker config | Completed | 2026-03-30 |
 | faster-whisper-server aliases | Completed | 2026-03-30 |
 | Install OpenAI Codex CLI | Completed | 2026-03-30 |
+| Install Pot Translator AppImage | Completed | 2026-04-01 |
+
