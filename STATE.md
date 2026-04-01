@@ -16,6 +16,7 @@
 - [x] **Whisper Aliases:** Added `whisper-server` and `whisper-stop` aliases to `~/.bashrc` and `Bazzite-dotfile/aliases.sh`.
 - [x] **Install OpenAI Library:** Installed 'openai' package and added 'scripts/verify-openai.js' for verification.
 - [x] **Install Pot Translator AppImage:** Downloaded (v3.0.7) and configured for x86_64 as a native alternative to Translumo.
+- [x] **Install Tesseract OCR:** Installed via Homebrew to resolve "Tesseract not installed!" error in Pot Translator.
 
 ## Current Project Version
 - **v1.5.3** (Commit: `7698cbf` / `d9a42d9`)
