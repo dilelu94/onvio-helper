@@ -73,3 +73,17 @@ Automate the 'artfija' matrix update process in Onvio using Playwright and a mod
 - [ ] 10-01-PLAN.md — Install OpenAI Library & Verify
 **Success Criteria**: OpenAI package is installed as a dependency and a verification script passes.
 **Requirements:** [OPENAI-01]
+
+## Phase 11: Media Tools & Automation
+**Goal**: Provide a quick script for converting WAV to Telegram-compatible MP3 on the Desktop.
+**Plans:** 1 plan
+- [ ] 11-01-PLAN.md — Implement WAV to MP3 Script & Alias
+**Success Criteria**: A functional conversion script exists in ~/scripts/ and the 'wav2mp3' alias is active.
+**Requirements:** [MEDIA-01]
+
+## Phase 12: Pot Translator Installation
+**Goal**: Install Pot Translator AppImage on Bazzite.
+**Plans:** 1 plan
+- [ ] 12-01-PLAN.md — Install Pot Translator AppImage & Desktop Entry
+**Success Criteria**: Pot Translator is installed in ~/AppImages/ and accessible via the application menu.
+**Requirements:** [POT-01]
